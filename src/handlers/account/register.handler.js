@@ -35,6 +35,8 @@ const registerHandler = router.post("/register", async (req, res) => {
             uuid
         }));
 
+        await client.disconnect();
+
         res.status(201).json({
             message: '유저가 생성되었습니다'
         });
