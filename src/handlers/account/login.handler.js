@@ -21,15 +21,12 @@ const loginHandler = router.post('/login', async (req, res, io) => {
     client.on('error', (err) => console.log('Redis Client Error', err));
     await client.connect();
 
-    await client.set(username, password); // 테스트용 코드 (key : value 형식)
+    await client.set(username, password);
 
     const user = await client.get(username);
-    const saltRounds = await bcrypt.genSalt(10); // 테스트용 코드
-    const hashedPassword = await bcrypt.hash(password, saltRounds); // 테스트용 코드
     if (!user) return res.status(401).json({ message: '존재하지 않는 계정입니다.' });
-    else if (!(await bcrypt.compare(password, hashedPassword)))
+    else if (!(await bcrypt.compare(password, user)))
       return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
-    // bcrypt.compare 변경해야함 테스트용 코드
 
     const token = jwt.sign(
       {
@@ -53,9 +50,3 @@ const loginHandler = router.post('/login', async (req, res, io) => {
 });
 
 export default loginHandler;
-
-// 공용 redis 설정 예시. ex
-// createClient({
-//     url: 'redis://alice:foobared@awesome.redis.server:6380'
-//   });
-// 현재는 로컬 호스트 redis 사용중
