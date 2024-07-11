@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import initSocket from './init/socket.js';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import registerHandler from './handlers/account/register.handler.js';
 
 dotenv.config();
 
@@ -17,6 +18,8 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static('tower_defense_client_online'));
+
+app.use('/', registerHandler);
 
 server.listen(PORT, async () => { //서버 실행 코드
     console.log(`포트 ${PORT} 서버가 실행되었습니다`);

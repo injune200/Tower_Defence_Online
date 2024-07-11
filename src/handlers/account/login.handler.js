@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 // import { getUser } from './userData.handler.js';
 
 // / 로그인 API /
-const loginHandler = async (req, res, io) => {
+const loginHandler = async (req, res) => {
     // 요청받은 데이터 accountId, accountPassword를 저장합니다.
     const { username, password } = req.body;
 
