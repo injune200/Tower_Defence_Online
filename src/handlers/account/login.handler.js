@@ -1,40 +1,52 @@
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
-// import { getUser } from './userData.handler.js';
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import { createClient } from "redis";
+import express from "express";
 
 // / 로그인 API /
-const loginHandler = async (req, res, io) => {
-    // 요청받은 데이터 accountId, accountPassword를 저장합니다.
-    const { username, password } = req.body;
+const router = express.Router();
 
-    try {
-        // username을 key값으로 data 불러오기
-        // const account = JSON.parse(await getUser(username));
+const loginHandler = router.post("/login", async (req, res, io) => {
+  const { username, password } = req.body;
 
-        // 해당 계정id가 DB에 존재하지 않는 계정id라면, 해당 사실을 알립니다.
-        if (!account) return res.status(401).json({ message: '존재하지 않는 계정입니다.' });
-        // 입력받은 사용자의 비밀번호와 데이터베이스에 저장된 비밀번호를 비교합니다.
-        else if (!(await bcrypt.compare(password, account.password)))
-            return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
-        // jwt token 생성
-        const token = jwt.sign(
-            {
-                type: 'JWT',
-                user_id: account.uuid,
-            },
-            process.env.JWT_SECRET_KEY,
-            {
-                expiresIn: '60m', // 60분 후 만료
-            },
-        );
-        console.log('로그인 성공\nuserData:', account);
-        res.cookie('authorization', `Bearer ${token}`);
-        //쿠키나, 로컬 스토리지를 사용
-        return res.status(200).json({ message: '로그인 성공', account_id: account.account_id });
-    } catch (error) {
-        console.error('로그인에 오류 발생!', error);
-        return res.status(500).json('Server Error: 500');
-    }
-};
+  {
+    const client = createClient();
+    client.on("error", (err) => console.log("Redis Client Error", err));
+    await client.connect();
+
+    await client.set(username, password); // 테스트용 코드 (key : value 형식)
+
+    const user = await client.get(username);
+    const saltRounds = await bcrypt.genSalt(10); // 테스트용 코드
+    const hashedPassword = await bcrypt.hash(password, saltRounds); // 테스트용 코드
+    if (!user)
+      return res.status(401).json({ message: "존재하지 않는 계정입니다." });
+    else if (!(await bcrypt.compare(password, hashedPassword)))
+      return res.status(401).json({ message: "비밀번호가 일치하지 않습니다." });
+    // bcrypt.compare 변경해야함 테스트용 코드
+
+    const token = jwt.sign(
+      {
+        type: "JWT",
+        user_id: user.id,
+      },
+      "10",
+      {
+        expiresIn: "60m",
+      },
+    );
+
+    console.log("로그인 성공\nuserData:", user);
+    res.setHeader("authorization", `Bearer ${token}`);
+
+    return res.status(200).json({ message: "로그인 성공", data: username });
+  }
+});
 
 export default loginHandler;
+
+// 공용 redis 설정 예시. ex
+// createClient({
+//     url: 'redis://alice:foobared@awesome.redis.server:6380'
+//   });
+// 현재는 로컬 호스트 redis 사용중
