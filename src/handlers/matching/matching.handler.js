@@ -17,10 +17,10 @@ export const waitForMatch = async (socket, payload) => {
 
     // start game
     gameStartHandler(game);
-    return { status: 'success', message: 'Game Start!' };
+    return { status: 'success', message: `Game Start in ${game.gameId}!` };
   }
 
-  return { status: 'success', message: 'Waiting for user ...' };
+  return { status: 'success', message: `Waiting for user in ${game.gameId}...` };
 };
 
 // 참여할 Game 찾기, 없다면 addGame 후 참여
