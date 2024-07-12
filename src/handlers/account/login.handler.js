@@ -22,6 +22,8 @@ const loginHandler = router.post('/login', async (req, res, io) => {
     await client.connect();
 
     const user = await client.get(username);
+
+    await client.disconnect();
     const userData = JSON.parse(user);
     if (!user) return res.status(401).json({ message: '존재하지 않는 계정입니다.' });
     else if (!(await bcrypt.compare(password, userData.password))) {
