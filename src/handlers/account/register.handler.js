@@ -2,6 +2,7 @@ import express from "express";
 import { createClient } from "redis";
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcrypt';
+import { config } from '../../config/config.js';
 
 const router = express.Router();
 
@@ -12,11 +13,11 @@ const registerHandler = router.post("/register", async (req, res) => {
     try {
 
         const client = createClient({
-            username: 'default',
-            password: '1234',
+            username: config.redis.redisId,
+            password: config.redis.redisPassword,
             socket: {
-                host: '3.22.236.177',
-                port: 6379,
+                host: config.redis.redisHost,
+                port: config.redis.redisPort,
             }
         });
 
