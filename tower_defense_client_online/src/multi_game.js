@@ -9,6 +9,7 @@ if (!localStorage.getItem('token')) {
 
 const version = '1.0.0';
 let sequence = 0;
+let uuid;
 
 let serverSocket;
 const canvas = document.getElementById('gameCanvas');
@@ -288,6 +289,10 @@ Promise.all([
     console.log(data);
   });
 
+  serverSocket.on('uuid', (data) => {
+    uuid = data;
+  });
+
   serverSocket.on('matchFound', (data) => {
     // 상대가 매치되면 3초 뒤 게임 시작
     progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
@@ -308,6 +313,37 @@ Promise.all([
         opponentCanvas.style.display = 'block';
 
         // TODO. 유저 및 상대방 유저 데이터 초기화
+        towerCost = data.towerCost;
+        monsterSpawnInterval = data.monsterSpawnInterval;
+
+        const { user, opponentUser } = data;
+        userGold = user.userGold;
+        base = user.base;
+        baseHp = user.baseHp;
+        monsterLevel = user.monsterLevel;
+        monsterPath = user.monsterPath;
+        initialTowerCoords = user.initialTowerCoords;
+        basePosition = user.basePosition;
+        for (const monster of user.monsters) {
+          monsters.push(monster);
+        }
+        for (const tower of user.towers) {
+          towers.push(tower);
+        }
+        score = user.score;
+        highScore = user.highScore;
+
+        opponentBase = opponentUser.opponentBase;
+        opponentMonsterPath = opponentUser.opponentMonsterPath;
+        opponentInitialTowerCoords = opponentUser.opponentInitialTowerCoords;
+        opponentBasePosition = opponentUser.opponentBasePosition;
+        for (const monster of opponentUser.monsters) {
+          opponentMonsters.push(monster);
+        }
+        for (const tower of opponentUser.towers) {
+          opponentTowers.push(tower);
+        }
+
         if (!isInitGame) {
           initGame();
         }
@@ -353,6 +389,8 @@ buyTowerButton.addEventListener('click', placeNewTower);
 document.body.appendChild(buyTowerButton);
 
 export const sendEvent = (handlerId, payload) => {
+  {
+  }
   serverSocket.emit('event', {
     handlerId,
     version,
