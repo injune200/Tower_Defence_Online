@@ -159,6 +159,7 @@ function placeNewTower() {
   const tower = new Tower(x, y);
   towers.push(tower);
   tower.draw(ctx, towerImage);
+  sendEvent(66, { x, y })
 }
 
 function placeBase(position, isPlayer) {
@@ -293,6 +294,12 @@ Promise.all([
 
   serverSocket.on("connect", () => {
     // TODO. 서버와 연결되면 대결 대기열 큐 진입
+  });
+
+  serverSocket.on("addTower", (data) => {//상대방에게 타워값 받을 경우
+    const tower = new Tower(data.x, data.y);
+    opponentTowers.push(tower);
+    tower.draw(opponentCtx, towerImage);
   });
 
   serverSocket.on("matchFound", (data) => {
