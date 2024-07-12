@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { createClient } from 'redis';
 import express from 'express';
+import { config } from '../../config/config.js';
 
 // / 로그인 API /
 const router = express.Router();
@@ -11,11 +12,11 @@ const loginHandler = router.post('/login', async (req, res, io) => {
 
   try {
     const client = createClient({
-      username: 'default', // use your Redis user. More info https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/
-      password: '1234', // use your password here
+      username: config.redis.redisId,
+      password: config.redis.redisPassword,
       socket: {
-        host: '3.22.236.177',
-        port: 6379,
+        host: config.redis.redisHost,
+        port: config.redis.redisPort,
       },
     });
     client.on('error', (err) => console.log('Redis Client Error', err));
@@ -33,9 +34,9 @@ const loginHandler = router.post('/login', async (req, res, io) => {
     const token = jwt.sign(
       {
         type: 'JWT',
-        user_id: user.id,
+        user_id: userData.uuid,
       },
-      '10',
+      config.server.secretKey,
       {
         expiresIn: '60m',
       },
