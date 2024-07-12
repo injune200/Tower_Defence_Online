@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { createClient } from 'redis';
 import express from 'express';
-import { config } from '../../config/config';
+import { config } from '../../config/config.js';
 
 // / 로그인 API /
 const router = express.Router();

@@ -1,5 +1,5 @@
 import { REDISHOST, REDISID, REDISPASSWORD, REDISPORT } from '../constatns/env.js';
-import { PORT, HOST, SECRET_KEY } from '../constatns/env.js';
+import { PORT, HOST, SECRETKEY } from '../constatns/env.js';
 
 export const config = {
   redis: {
@@ -11,6 +11,6 @@ export const config = {
   server: {
     port: PORT,
     host: HOST,
-    secretKey: SECRET_KEY,
+    secretKey: SECRETKEY,
   },
 };
