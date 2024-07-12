@@ -1,16 +1,28 @@
-import { REDISHOST, REDISID, REDISPASSWORD, REDISPORT } from '../constatns/env.js';
-import { PORT, HOST, SECRETKEY } from '../constatns/env.js';
+import {
+  CLIENT_VERSION,
+  JWT_SECRET_KEY,
+  REDIS_HOST,
+  REDIS_ID,
+  REDIS_PASSWORD,
+  REDIS_PORT,
+} from '../constants/env.js';
+import { PORT, HOST } from '../constants/env.js';
 
 export const config = {
   redis: {
-    redisPort: REDISPORT,
-    redisHost: REDISHOST,
-    redisId: REDISID,
-    redisPassword: REDISPASSWORD,
+    redisPort: REDIS_PORT,
+    redisHost: REDIS_HOST,
+    redisId: REDIS_ID,
+    redisPassword: REDIS_PASSWORD,
+  },
+  client: {
+    version: CLIENT_VERSION,
   },
   server: {
     port: PORT,
     host: HOST,
-    secretKey: SECRETKEY,
+  },
+  auth: {
+    secretKey: JWT_SECRET_KEY,
   },
 };
