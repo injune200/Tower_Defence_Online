@@ -9,3 +9,4 @@ export const REDISPORT = process.env.REDISPORT;
 export const REDISHOST = process.env.REDISHOST;
 export const REDISID = process.env.REDISID;
 export const REDISPASSWORD = process.env.REDISPASSWORD;
+export const SECRET_KEY = process.env.SECRET_KEY;
