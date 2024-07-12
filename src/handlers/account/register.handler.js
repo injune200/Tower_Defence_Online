@@ -1,36 +1,50 @@
-// import { addUser } from '../models/user.model.js';
-// import { getUser } from './userData.handler.js';
+import express from "express";
+import { createClient } from "redis";
+import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcrypt';
 
-const registerHandler = async (req, res, io) => {
+const router = express.Router();
+
+const registerHandler = router.post("/register", async (req, res) => {
     const { username, password } = req.body;
+    const uuid = uuidv4();
 
     try {
-        if (!username || !password) {
-            return res.status(400).json({ message: '유저 이름과 비밀번호를 입력해주세요.' });
+
+        const client = createClient({
+            username: 'default',
+            password: '1234',
+            socket: {
+                host: '3.22.236.177',
+                port: 6379,
+            }
+        });
+
+        await client.connect();
+
+        const existUser = await client.get(username);
+
+        if (existUser) {//존재 여부 검사
+            return res.status(400).json({ message: "이미존재하는 사용자 입니다." })
         }
 
-        // username을 key값으로 userData 불러오기
-        // const existingUser = JSON.parse(await getUser(username));
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        if (existingUser) {
-            return res.status(400).json({ message: '이미 존재하는 사용자 이름입니다.' });
-        }
+        await client.set(username, JSON.stringify({
+            password: hashedPassword,
+            uuid
+        }));
 
-        // const newUser = await addUser(username, password);
+        await client.disconnect();
 
         res.status(201).json({
-            message: '유저가 생성되었습니다',
-            user: {
-                uuid: newUser.uuid,
-                username: newUser.username,
-            },
+            message: '유저가 생성되었습니다'
         });
-        io.emit('user-registered', { username: newUser.username, uuid: newUser.uuid });
+
     } catch (error) {
         console.log('회원 가입중 에러 발생', error);
         res.status(500).json({ message: '서버 오류 발생' });
     }
-};
+});
 
 export default registerHandler;
-
