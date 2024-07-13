@@ -5,14 +5,12 @@ import cookieParser from 'cookie-parser';
 import loginHandler from './handlers/account/login.handler.js';
 import registerHandler from './handlers/account/register.handler.js';
 import { config } from './config/config.js';
-import { addGame } from './session/game.session.js';
 
 const app = express();
 const server = createServer(app);
 const PORT = config.server.port;
 
 const io = initSocket(server); // initSocket에서 반환된 io 객체를 받아옴
-export const initialGame = addGame('initialGame');
 
 //json 파싱
 app.use(cookieParser());
