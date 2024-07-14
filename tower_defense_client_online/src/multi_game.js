@@ -185,7 +185,7 @@ function placeNewTower() {
   const tower = new Tower(x, y);
   towers.push(tower);
   tower.draw(ctx, towerImage);
-  sendEvent(66, { x, y })
+  sendEvent(66, { uuid, x, y })
 }
 
 function placeBase(position, isPlayer) {
