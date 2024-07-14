@@ -10,6 +10,7 @@ if (!localStorage.getItem('token')) {
 const version = '1.0.0';
 let sequence = 0;
 let uuid;
+const numOfInitialTowers = 3; // 초기 타워 개수
 
 let serverSocket;
 const canvas = document.getElementById('gameCanvas');
@@ -314,7 +315,15 @@ Promise.all([
   serverSocket.on('connection', (data) => {
     console.log(data);
     // TODO. 서버와 연결되면 대결 대기열 큐 진입
-    sendEvent(0, { token: serverSocket.auth.token });
+    if (!monsterPath) {
+      monsterPath = generateRandomMonsterPath();
+    }
+    const towerCoords = [];
+    for (let i = 0; i < numOfInitialTowers; i++) {
+      const { x, y } = getRandomPositionNearPath(200);
+      towerCoords.push({ x, y });
+    }
+    sendEvent(0, { token: serverSocket.auth.token, monsterPath, initialTowerCoords: towerCoords });
   });
 
   serverSocket.on("addTower", (data) => {//상대방에게 타워값 받을 경우
@@ -371,17 +380,16 @@ Promise.all([
         score = user.score;
         highScore = user.highScore;
 
-        opponentBase = opponentUser.opponentBase;
-        opponentMonsterPath = opponentUser.opponentMonsterPath;
-        opponentInitialTowerCoords = opponentUser.opponentInitialTowerCoords;
-        opponentBasePosition = opponentUser.opponentBasePosition;
+        opponentBase = opponentUser.base;
+        opponentMonsterPath = opponentUser.monsterPath;
+        opponentInitialTowerCoords = opponentUser.initialTowerCoords;
+        opponentBasePosition = opponentUser.basePosition;
         for (const monster of opponentUser.monsters) {
           opponentMonsters.push(monster);
         }
         for (const tower of opponentUser.towers) {
           opponentTowers.push(tower);
         }
-
         if (!isInitGame) {
           initGame();
         }
