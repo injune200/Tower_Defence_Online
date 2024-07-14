@@ -1,8 +1,8 @@
-import User from "../class/model/user.class.js";
-import { userSessions } from "./session.js";
+import User from '../class/model/user.class.js';
+import { userSessions } from './session.js';
 
-export const addUser = (uuid) => {
-  const user = new User(uuid);
+export const addUser = (uuid, socket) => {
+  const user = new User(uuid, socket);
   userSessions.push(user);
   return user;
 };
@@ -23,4 +23,8 @@ export const getAllUserSessions = () => {
 
 export const clearSession = () => {
   userSessions.splice(0, userSessions.length);
+};
+
+export const getUuidBySocket = (socket) => {
+  return userSessions.find((user) => user.socket === socket);
 };

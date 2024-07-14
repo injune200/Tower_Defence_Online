@@ -7,7 +7,10 @@ if (!localStorage.getItem('token2')) {
   location.href = '/login';
 }
 
+const version = '1.0.0';
+let sequence = 0;
 let uuid;
+
 let serverSocket;
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -168,10 +171,10 @@ function spawnMonster() {
   const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
   monsters.push(newMonster);
 
-  serverSocket.emit('event', {
-    userId,
+  sendEvent(5, {
+    uuid: uuid,
+    monsterData: newMonster,
   });
-  // TODO. 서버로 몬스터 생성 이벤트 전송
 }
 
 function gameLoop() {
@@ -215,6 +218,7 @@ function gameLoop() {
         attackedSound.volume = 0.3;
         attackedSound.play();
         // TODO. 몬스터가 기지를 공격했을 때 서버로 이벤트 전송
+        sendEvent(6, { monsterData: monster });
         monsters.splice(i, 1);
       }
     } else {
@@ -266,7 +270,7 @@ Promise.all([
   new Promise((resolve) => (pathImage.onload = resolve)),
   ...monsterImages.map((img) => new Promise((resolve) => (img.onload = resolve))),
 ]).then(() => {
-  serverSocket = io('http://15.165.15.118:3000', {
+  serverSocket = io('http://localhost:5500', {
     auth: {
       token: localStorage.getItem('token2'),
     },
@@ -279,8 +283,39 @@ Promise.all([
     }
   });
 
-  serverSocket.on('connect', () => {
+  serverSocket.on('connection', (data) => {
+    console.log(data);
     // TODO. 서버와 연결되면 대결 대기열 큐 진입
+    sendEvent(0, { token: serverSocket.auth.token });
+  });
+
+  serverSocket.on('response', (data) => {
+    console.log(data);
+  });
+
+  serverSocket.on('uuid', (data) => {
+    uuid = data;
+  });
+
+  serverSocket.on('createOpponent', (data) => {
+    const opponentMonster = data;
+    opponentMonsters.push(opponentMonster);
+  });
+
+  serverSocket.on('removeOpponent', (data) => {
+    const { monsterNumber, hp, level, creationTime } = data;
+
+    for (let i = 0; i < opponentMonsters.length; i++) {
+      const monster = opponentMonsters[i];
+      if (
+        monster.monsterNumber == monsterNumber &&
+        monster.hp == hp &&
+        monster.level == level &&
+        monster.creationTime == creationTime
+      ) {
+        opponentMonsters.splice(i, 1);
+      }
+    }
   });
 
   serverSocket.on('matchFound', (data) => {
@@ -303,6 +338,36 @@ Promise.all([
         opponentCanvas.style.display = 'block';
 
         // TODO. 유저 및 상대방 유저 데이터 초기화
+        towerCost = data.towerCost;
+        monsterSpawnInterval = data.monsterSpawnInterval;
+
+        const { user, opponentUser } = data;
+        userGold = user.userGold;
+        base = user.base;
+        baseHp = user.baseHp;
+        monsterLevel = user.monsterLevel;
+        monsterPath = user.monsterPath;
+        initialTowerCoords = user.initialTowerCoords;
+        basePosition = user.basePosition;
+        for (const monster of user.monsters) {
+          monsters.push(monster);
+        }
+        for (const tower of user.towers) {
+          towers.push(tower);
+        }
+        score = user.score;
+        highScore = user.highScore;
+
+        opponentBase = opponentUser.opponentBase;
+        opponentMonsterPath = opponentUser.opponentMonsterPath;
+        opponentInitialTowerCoords = opponentUser.opponentInitialTowerCoords;
+        opponentBasePosition = opponentUser.opponentBasePosition;
+        for (const monster of opponentUser.monsters) {
+          opponentMonsters.push(monster);
+        }
+        for (const tower of opponentUser.towers) {
+          opponentTowers.push(tower);
+        }
         if (!isInitGame) {
           initGame();
         }
@@ -346,3 +411,12 @@ buyTowerButton.style.display = 'none';
 buyTowerButton.addEventListener('click', placeNewTower);
 
 document.body.appendChild(buyTowerButton);
+
+export const sendEvent = (handlerId, payload) => {
+  serverSocket.emit('event', {
+    handlerId,
+    version,
+    sequence,
+    payload,
+  });
+};

@@ -34,9 +34,9 @@ const loginHandler = router.post('/login', async (req, res, io) => {
     const token = jwt.sign(
       {
         type: 'JWT',
-        user_id: userData.uuid,
+        uuid: userData.uuid,
       },
-      config.server.secretKey,
+      config.auth.secretKey,
       {
         expiresIn: '60m',
       },

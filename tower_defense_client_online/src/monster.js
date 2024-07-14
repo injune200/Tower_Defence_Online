@@ -16,6 +16,7 @@ export class Monster {
     this.image = monsterImages[this.monsterNumber]; // 몬스터 이미지
     this.level = level; // 몬스터 레벨
     this.init(level);
+    this.creationTime = Date.now();
   }
 
   init(level) {
