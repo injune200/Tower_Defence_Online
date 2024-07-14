@@ -73,6 +73,35 @@ for (let i = 1; i <= NUM_OF_MONSTERS; i++) {
 
 let bgm;
 
+function generateRandomMonsterPath() {
+  const path = [];
+  let currentX = 0;
+  let currentY = Math.floor(Math.random() * 21) + 500; // 500 ~ 520 범위의 y 시작 (캔버스 y축 중간쯤에서 시작할 수 있도록 유도)
+
+  path.push({ x: currentX, y: currentY });
+
+  while (currentX < canvas.width) {
+    currentX += Math.floor(Math.random() * 100) + 50; // 50 ~ 150 범위의 x 증가
+    // x 좌표에 대한 clamp 처리
+    if (currentX > canvas.width) {
+      currentX = canvas.width;
+    }
+
+    currentY += Math.floor(Math.random() * 200) - 100; // -100 ~ 100 범위의 y 변경
+    // y 좌표에 대한 clamp 처리
+    if (currentY < 0) {
+      currentY = 0;
+    }
+    if (currentY > canvas.height) {
+      currentY = canvas.height;
+    }
+
+    path.push({ x: currentX, y: currentY });
+  }
+
+  return path;
+}
+
 function initMap() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height); // 배경 이미지 그리기
   drawPath(monsterPath, ctx);
@@ -252,6 +281,8 @@ function initGame() {
   bgm.volume = 0.2;
   bgm.play();
 
+
+  monsterPath = generateRandomMonsterPath()
   initMap(); // 맵 초기화 (배경, 몬스터 경로 그리기)
 
   setInterval(spawnMonster, monsterSpawnInterval); // 설정된 몬스터 생성 주기마다 몬스터 생성
