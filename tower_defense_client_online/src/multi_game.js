@@ -10,6 +10,7 @@ if (!localStorage.getItem('token')) {
 const version = '1.0.0';
 let sequence = 0;
 let uuid;
+const numOfInitialTowers = 3; // 초기 타워 개수
 
 let serverSocket;
 const canvas = document.getElementById('gameCanvas');
@@ -314,7 +315,12 @@ Promise.all([
     if (!monsterPath) {
       monsterPath = generateRandomMonsterPath();
     }
-    sendEvent(0, { token: serverSocket.auth.token, monsterPath });
+    const towerCoords = [];
+    for (let i = 0; i < numOfInitialTowers; i++) {
+      const { x, y } = getRandomPositionNearPath(200);
+      towerCoords.push({ x, y });
+    }
+    sendEvent(0, { token: serverSocket.auth.token, monsterPath, initialTowerCoords: towerCoords });
   });
 
   serverSocket.on('response', (data) => {
@@ -375,7 +381,6 @@ Promise.all([
         for (const tower of opponentUser.towers) {
           opponentTowers.push(tower);
         }
-
         if (!isInitGame) {
           initGame();
         }
