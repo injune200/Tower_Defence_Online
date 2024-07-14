@@ -347,7 +347,6 @@ Promise.all([
       const monster = opponentMonsters[i];
       if (
         monster.monsterNumber == monsterNumber &&
-        monster.hp == hp &&
         monster.level == level &&
         monster.creationTime == creationTime
       ) {

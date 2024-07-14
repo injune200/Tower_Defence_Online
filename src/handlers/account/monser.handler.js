@@ -42,7 +42,6 @@ export const removeMonser = (socket, payload) => {
   for (let monster of user.monsters) {
     if (
       monsterNumber == monster.monsterNumber &&
-      hp == monster.hp &&
       level == monster.level &&
       creationTime == monster.creationTime
     ) {
