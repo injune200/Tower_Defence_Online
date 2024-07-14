@@ -8,7 +8,7 @@ export const waitForMatch = async (socket, payload) => {
   const uuid = await authorization(payload);
   socket.emit('uuid', uuid);
 
-  const user = addUser(uuid, socket);
+  const user = addUser(uuid, socket, payload);
   const game = findGameSession();
   game.addUser(user);
 
