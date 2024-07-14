@@ -253,6 +253,10 @@ function gameLoop() {
     }
   }
 
+  if (baseHp <= 0) {
+    sendEvent(99, {})
+  }
+
   // 상대방 게임 화면 업데이트
   opponentCtx.drawImage(backgroundImage, 0, 0, opponentCanvas.width, opponentCanvas.height);
   drawPath(opponentMonsterPath, opponentCtx); // 상대방 경로 다시 그리기
