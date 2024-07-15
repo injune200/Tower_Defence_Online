@@ -260,6 +260,7 @@ function gameLoop() {
       }
     } else {
       // TODO. 몬스터 사망 이벤트 전송
+      sendEvent(6, { uuid: uuid, monsterData: monster });
       monsters.splice(i, 1);
     }
   }
@@ -355,7 +356,7 @@ Promise.all([
   });
 
   serverSocket.on('removeOpponentMonster', (data) => {
-    const { monsterNumber, hp, level, creationTime } = data;
+    const { monsterNumber, hp, level, creationTime } = data.payload;
 
     for (let i = 0; i < opponentMonsters.length; i++) {
       const monster = opponentMonsters[i];
@@ -364,7 +365,9 @@ Promise.all([
         monster.level == level &&
         monster.creationTime == creationTime
       ) {
+        console.log('removeOpponet');
         opponentMonsters.splice(i, 1);
+        break;
       }
     }
   });
