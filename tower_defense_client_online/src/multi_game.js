@@ -351,6 +351,7 @@ Promise.all([
         monster.creationTime == creationTime
       ) {
         opponentMonsters.splice(i, 1);
+        break;
       }
     }
   });
