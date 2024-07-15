@@ -30,7 +30,7 @@ export const responseMonster = (socket, payload) => {
   return { status: 'success', message: '몬스터 생성 완료' };
 };
 
-export const removeMontser = (socket, payload) => {
+export const removeMonster = (socket, payload) => {
   const { uuid } = payload;
   const { monsterNumber, hp, level, creationTime } = payload.monsterData;
   const user = getUser(uuid);
