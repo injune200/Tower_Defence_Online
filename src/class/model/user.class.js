@@ -12,6 +12,7 @@ class User {
     this.towers = []; // 유저 타워 목록
     this.score = 0; // 게임 점수
     this.highScore = 0; // 기존 최고 점수
+    this.gameId;
     this.socket = socket;
   }
 }
