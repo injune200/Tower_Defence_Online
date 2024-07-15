@@ -1,4 +1,4 @@
-import { getAllGameSessions } from "../../session/game.session.js";
+import { getGame } from "../../session/game.session.js";
 import { getUser, getUuidBySocket } from "../../session/user.session.js"
 
 export const addTower = async (socket, payload) => {
