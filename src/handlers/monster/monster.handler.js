@@ -3,21 +3,21 @@ import { getGame } from '../../session/game.session.js';
 
 export const responseMonster = (socket, payload) => {
   const { uuid } = payload;
-  const { monsterPath, monsterLevel, monsterNumber } = payload.monsterData;
+  const { path, level } = payload.monsterData;
 
   const user = getUser(uuid);
+
   if (!user)
     return { status: 'fail', message: '존재하지 않는 유저 또는 유효하지 않은 요청입니다.' };
 
-  if (user.monsterPath !== monsterPath)
+  if (user.monsterPath[0].x !== path[0].x || user.monsterPath[0].y !== path[0].y)
     return { status: 'fail', message: '잘못된 monsterPath 입니다.' };
 
-  if (user.monsterLevel !== monsterLevel)
+  if (user.monsterLevel != level)
     return { status: 'fail', message: '현재 존재할 수 없는 몬스터 요청입니다.' };
 
-  user.monsters.push(payload.monsterData); //서버 데이터 업데이트
+  user.monsters.push(payload.monsterData);
 
-  //상대방에게도 알리는 전달 코드
   try {
     const gameSession = getGame(user.gameId);
     const opponentUser = gameSession.getOpponentUser(uuid);
@@ -30,7 +30,7 @@ export const responseMonster = (socket, payload) => {
   return { status: 'success', message: '몬스터 생성 완료' };
 };
 
-export const removeMonser = (socket, payload) => {
+export const removeMonster = (socket, payload) => {
   const { uuid } = payload;
   const { monsterNumber, hp, level, creationTime } = payload.monsterData;
   const user = getUser(uuid);
@@ -38,14 +38,15 @@ export const removeMonser = (socket, payload) => {
   if (!user)
     return { status: 'fail', message: '존재하지 않는 유저 또는 유효하지 않은 요청입니다.' };
 
-  const isExistMonster = null;
+  let isExistMonster = null;
   for (let monster of user.monsters) {
     if (
       monsterNumber == monster.monsterNumber &&
       level == monster.level &&
       creationTime == monster.creationTime
     ) {
-      isExistMonster = true;
+      isExistMonster = monster;
+      break;
     }
   }
 
@@ -54,6 +55,7 @@ export const removeMonser = (socket, payload) => {
       if (user.monsters[i] == isExistMonster) {
         user.monsters.splice(i, 1);
         try {
+          const gameSession = getGame(user.gameId);
           const opponentUser = gameSession.getOpponentUser(uuid);
           opponentUser.socket.emit('removeOpponentMonster', { payload: payload.monsterData });
         } catch (err) {

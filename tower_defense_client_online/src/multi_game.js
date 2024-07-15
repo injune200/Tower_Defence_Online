@@ -222,6 +222,13 @@ function gameLoop() {
   ctx.fillStyle = 'black';
   ctx.fillText(`현재 레벨: ${monsterLevel}`, 100, 200); // 최고 기록 표시
 
+  for (const monster of monsters) {
+    monster.draw(ctx);
+  }
+  for (const monster of opponentMonsters) {
+    monster.draw(opponentCtx, true);
+  }
+
   // 타워 그리기 및 몬스터 공격 처리
   towers.forEach((tower) => {
     tower.draw(ctx, towerImage);
@@ -253,6 +260,7 @@ function gameLoop() {
       }
     } else {
       // TODO. 몬스터 사망 이벤트 전송
+      sendEvent(6, { uuid: uuid, monsterData: monster });
       monsters.splice(i, 1);
     }
   }
@@ -336,12 +344,19 @@ Promise.all([
   });
 
   serverSocket.on('createOpponentMonster', (data) => {
-    const opponentMonster = data;
+    const opponentMonster = new Monster(
+      opponentMonsterPath,
+      monsterImages,
+      data.payload.level,
+      data.payload.monsterNumber,
+      true,
+      data.payload,
+    );
     opponentMonsters.push(opponentMonster);
   });
 
   serverSocket.on('removeOpponentMonster', (data) => {
-    const { monsterNumber, hp, level, creationTime } = data;
+    const { monsterNumber, hp, level, creationTime } = data.payload;
 
     for (let i = 0; i < opponentMonsters.length; i++) {
       const monster = opponentMonsters[i];
@@ -351,6 +366,7 @@ Promise.all([
         monster.creationTime == creationTime
       ) {
         opponentMonsters.splice(i, 1);
+        break;
       }
     }
   });
