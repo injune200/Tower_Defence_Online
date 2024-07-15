@@ -3,14 +3,14 @@ import { getGame } from '../../session/game.session.js';
 
 export const responseMonster = (socket, payload) => {
   const { uuid } = payload;
-  const { monsterPath, monsterLevel, monsterNumber } = payload.monsterData;
+  const { path, monsterLevel, monsterNumber } = payload.monsterData;
 
   const user = getUser(uuid);
   if (!user)
     return { status: 'fail', message: '존재하지 않는 유저 또는 유효하지 않은 요청입니다.' };
 
-  if (user.monsterPath !== monsterPath)
-    return { status: 'fail', message: '잘못된 monsterPath 입니다.' };
+  console.log(user.monsterPath, '@@@@@@@', path);
+  if (user.monsterPath !== path) return { status: 'fail', message: '잘못된 monsterPath 입니다.' };
 
   if (user.monsterLevel !== monsterLevel)
     return { status: 'fail', message: '현재 존재할 수 없는 몬스터 요청입니다.' };

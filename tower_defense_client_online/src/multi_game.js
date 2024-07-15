@@ -222,6 +222,13 @@ function gameLoop() {
   ctx.fillStyle = 'black';
   ctx.fillText(`현재 레벨: ${monsterLevel}`, 100, 200); // 최고 기록 표시
 
+  for (const monster of monsters) {
+    monster.draw(ctx);
+  }
+  for (const monster of opponentMonsters) {
+    monster.draw(opponentCtx, true);
+  }
+
   // 타워 그리기 및 몬스터 공격 처리
   towers.forEach((tower) => {
     tower.draw(ctx, towerImage);
@@ -336,7 +343,14 @@ Promise.all([
   });
 
   serverSocket.on('createOpponentMonster', (data) => {
-    const opponentMonster = data;
+    const opponentMonster = new Monster(
+      opponentMonsterPath,
+      monsterImages,
+      data.payload.level,
+      data.payload.monsterNumber,
+      true,
+      data.payload,
+    );
     opponentMonsters.push(opponentMonster);
   });
 
