@@ -231,15 +231,16 @@ function gameLoop() {
   }
 
   // 타워 그리기 및 몬스터 공격 처리
-  towers.forEach((tower) => {
+  towers.forEach((tower, towerIndex) => {
     tower.draw(ctx, towerImage);
     tower.updateCooldown();
-    monsters.forEach((monster) => {
+    monsters.forEach((monster, monsterIndex) => {
       const distance = Math.sqrt(
         Math.pow(tower.x - monster.x, 2) + Math.pow(tower.y - monster.y, 2),
       );
       if (distance < tower.range) {
         tower.attack(monster);
+        sendEvent(77, { uuid, towerIndex, monsterIndex })
       }
     });
   });
@@ -294,7 +295,6 @@ function initGame() {
   bgm.volume = 0.2;
   bgm.play();
 
-
   initMap(); // 맵 초기화 (배경, 몬스터 경로 그리기)
 
   setInterval(spawnMonster, monsterSpawnInterval); // 설정된 몬스터 생성 주기마다 몬스터 생성
@@ -341,6 +341,12 @@ Promise.all([
     const tower = new Tower(data.opponentTower.x, data.opponentTower.y);
     opponentTowers.push(tower);
     tower.draw(opponentCtx, towerImage);
+  });
+
+  serverSocket.on('towerAttackMonster', (data) => {
+    const tower = opponentTowers[data.towerIndex]
+    const monster = opponentMonsters[data.monsterIndex]
+    tower.attack(monster);
   });
 
   serverSocket.on('response', (data) => {
