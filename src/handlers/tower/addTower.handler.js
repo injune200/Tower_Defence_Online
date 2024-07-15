@@ -11,17 +11,11 @@ export const addTower = async (socket, payload) => {
     }
 
     user.towers.push(payload.tower)
-    const gameSessions = getAllGameSessions();
-    let opponentSocket;
 
-    for (let element of gameSessions) { //상대방 소켓 정보 가져오기
-        if (element.users[0].uuid == payload.uuid) {
-            opponentSocket = element.users[1].socket
-        } else if (element.users[1].uuid == payload.uuid) {
-            opponentSocket = element.users[0].socket
-        }
-    }
-    opponentSocket.emit('addTower', { opponentTower: payload.tower })
+    const gameSession = getGame(user.gameId);
+    const opponentUser = gameSession.getOpponentUser(payload.uuid);
+
+    opponentUser.socket.emit('addTower', { opponentTower: payload.tower })
 
     return { message: '타워 좌표 전송 완료' }
 }
