@@ -22,10 +22,10 @@ export const handlerEvent = async (io, socket, data) => {
 
   // socket.broadcast.emit()
 
-  // if (response.broadcast !== undefined) {
-  //   io.emit('response', response);
-  //   return;
-  // }
+  if (response.broadcast !== undefined) {
+    io.emit('response', response);
+    return;
+  }
 
   socket.emit('response', response);
 };
