@@ -335,12 +335,12 @@ Promise.all([
     uuid = data;
   });
 
-  serverSocket.on('createOpponent', (data) => {
+  serverSocket.on('createOpponentMonster', (data) => {
     const opponentMonster = data;
     opponentMonsters.push(opponentMonster);
   });
 
-  serverSocket.on('removeOpponent', (data) => {
+  serverSocket.on('removeOpponentMonster', (data) => {
     const { monsterNumber, hp, level, creationTime } = data;
 
     for (let i = 0; i < opponentMonsters.length; i++) {

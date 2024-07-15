@@ -21,7 +21,7 @@ export const responseMonster = (socket, payload) => {
   try {
     const gameSession = getGame(user.gameId);
     const opponentUser = gameSession.getOpponentUser(uuid);
-    opponentUser.socket.emit('createOpponent', { payload: payload.monsterData });
+    opponentUser.socket.emit('createOpponentMonster', { payload: payload.monsterData });
   } catch (err) {
     console.log(err);
     return { status: 'fail', message: `서버 내의 오류 발생` };
@@ -55,7 +55,7 @@ export const removeMonser = (socket, payload) => {
         user.monsters.splice(i, 1);
         try {
           const opponentUser = gameSession.getOpponentUser(uuid);
-          opponentUser.socket.emit('removeOpponent', { payload: payload.monsterData });
+          opponentUser.socket.emit('removeOpponentMonster', { payload: payload.monsterData });
         } catch (err) {
           console.log(err);
           return { status: 'fail', message: `서버 내의 오류 발생` };
