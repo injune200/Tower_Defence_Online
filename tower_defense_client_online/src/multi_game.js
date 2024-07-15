@@ -295,7 +295,6 @@ function initGame() {
   bgm.play();
 
 
-  monsterPath = generateRandomMonsterPath()
   initMap(); // 맵 초기화 (배경, 몬스터 경로 그리기)
 
   setInterval(spawnMonster, monsterSpawnInterval); // 설정된 몬스터 생성 주기마다 몬스터 생성
