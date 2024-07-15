@@ -201,7 +201,10 @@ function spawnMonster() {
   const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
   monsters.push(newMonster);
 
-  // TODO. 서버로 몬스터 생성 이벤트 전송
+  sendEvent(5, {
+    uuid: uuid,
+    monsterData: newMonster,
+  });
 }
 
 function gameLoop() {
@@ -245,6 +248,7 @@ function gameLoop() {
         attackedSound.volume = 0.3;
         attackedSound.play();
         // TODO. 몬스터가 기지를 공격했을 때 서버로 이벤트 전송
+        sendEvent(6, { uuid: uuid, monsterData: monster });
         monsters.splice(i, 1);
       }
     } else {
@@ -329,6 +333,26 @@ Promise.all([
 
   serverSocket.on('uuid', (data) => {
     uuid = data;
+  });
+
+  serverSocket.on('createOpponentMonster', (data) => {
+    const opponentMonster = data;
+    opponentMonsters.push(opponentMonster);
+  });
+
+  serverSocket.on('removeOpponentMonster', (data) => {
+    const { monsterNumber, hp, level, creationTime } = data;
+
+    for (let i = 0; i < opponentMonsters.length; i++) {
+      const monster = opponentMonsters[i];
+      if (
+        monster.monsterNumber == monsterNumber &&
+        monster.level == level &&
+        monster.creationTime == creationTime
+      ) {
+        opponentMonsters.splice(i, 1);
+      }
+    }
   });
 
   serverSocket.on('matchFound', (data) => {
@@ -426,8 +450,6 @@ buyTowerButton.addEventListener('click', placeNewTower);
 document.body.appendChild(buyTowerButton);
 
 export const sendEvent = (handlerId, payload) => {
-  {
-  }
   serverSocket.emit('event', {
     handlerId,
     version,
