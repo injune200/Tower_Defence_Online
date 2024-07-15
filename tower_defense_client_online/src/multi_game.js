@@ -365,7 +365,6 @@ Promise.all([
         monster.level == level &&
         monster.creationTime == creationTime
       ) {
-        console.log('removeOpponet');
         opponentMonsters.splice(i, 1);
         break;
       }
