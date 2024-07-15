@@ -185,6 +185,7 @@ function placeNewTower() {
   const tower = new Tower(x, y);
   towers.push(tower);
   tower.draw(ctx, towerImage);
+  sendEvent(66, { uuid, tower })
 }
 
 function placeBase(position, isPlayer) {
@@ -333,6 +334,12 @@ Promise.all([
       towerCoords.push({ x, y });
     }
     sendEvent(0, { token: serverSocket.auth.token, monsterPath, initialTowerCoords: towerCoords });
+  });
+
+  serverSocket.on("addTower", (data) => {//상대방에게 타워값 받을 경우
+    const tower = new Tower(data.opponentTower.x, data.opponentTower.y);
+    opponentTowers.push(tower);
+    tower.draw(opponentCtx, towerImage);
   });
 
   serverSocket.on('response', (data) => {

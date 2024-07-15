@@ -185,6 +185,7 @@ function placeNewTower() {
   const tower = new Tower(x, y);
   towers.push(tower);
   tower.draw(ctx, towerImage);
+  sendEvent(66, { uuid, tower })
 }
 
 function placeBase(position, isPlayer) {
@@ -293,6 +294,7 @@ function initGame() {
   bgm.volume = 0.2;
   bgm.play();
 
+
   initMap(); // 맵 초기화 (배경, 몬스터 경로 그리기)
 
   setInterval(spawnMonster, monsterSpawnInterval); // 설정된 몬스터 생성 주기마다 몬스터 생성
@@ -333,6 +335,12 @@ Promise.all([
       towerCoords.push({ x, y });
     }
     sendEvent(0, { token: serverSocket.auth.token, monsterPath, initialTowerCoords: towerCoords });
+  });
+
+  serverSocket.on("addTower", (data) => {//상대방에게 타워값 받을 경우
+    const tower = new Tower(data.opponentTower.x, data.opponentTower.y);
+    opponentTowers.push(tower);
+    tower.draw(opponentCtx, towerImage);
   });
 
   serverSocket.on('response', (data) => {
