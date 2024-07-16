@@ -4,6 +4,7 @@ import { responseMonster, removeMonster } from './monster/monster.handler.js';
 import { towerAttackMonster } from './tower/towerAttackMonster.js';
 import { baseAttacked } from './base/base.handler.js';
 import { levelUp } from './level/levelUp.handler.js';
+import { spawnSpecialMonster } from './monster/spawnSpecialMonster.handler.js';
 
 const handlerMappings = {
   0: waitForMatch,
@@ -11,6 +12,7 @@ const handlerMappings = {
   6: removeMonster,
   11: levelUp,
   33: baseAttacked,
+  55: spawnSpecialMonster,
   66: addTower,
   77: towerAttackMonster,
 };
