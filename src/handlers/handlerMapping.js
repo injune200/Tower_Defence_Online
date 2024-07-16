@@ -3,14 +3,16 @@ import { addTower } from './tower/addTower.handler.js';
 import { responseMonster, removeMonster } from './monster/monster.handler.js';
 import { towerAttackMonster } from './tower/towerAttackMonster.js';
 import { baseAttackedHandler } from './base/base.handler.js';
+import { writeChat } from './chat/chat.handler.js';
 
 const handlerMappings = {
   0: waitForMatch,
   5: responseMonster,
   6: removeMonster,
+  7: writeChat,
   33: baseAttackedHandler,
   66: addTower,
-  77: towerAttackMonster
+  77: towerAttackMonster,
 };
 
 export default handlerMappings;

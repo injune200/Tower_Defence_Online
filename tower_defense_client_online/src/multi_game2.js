@@ -19,6 +19,11 @@ const ctx = canvas.getContext('2d');
 const opponentCanvas = document.getElementById('opponentCanvas');
 const opponentCtx = opponentCanvas.getContext('2d');
 
+const chattingCanvas = document.getElementById('chattingCanvas'); // 채팅 ROOT
+const scrollContainer = document.getElementById('scrollContainer'); // 채팅 올라오는 곳
+const chatContent = document.getElementById('chatContent');
+const chatButton = document.getElementById('chatButton');
+
 const progressBarContainer = document.getElementById('progressBarContainer');
 const progressBarMessage = document.getElementById('progressBarMessage');
 const progressBar = document.getElementById('progressBar');
@@ -73,6 +78,16 @@ for (let i = 1; i <= NUM_OF_MONSTERS; i++) {
 }
 
 let bgm;
+
+function chatUpload() {
+  if (chatContent.value.trim() == '') {
+    alert('아무런 내용이 없습니다.');
+    return;
+  }
+
+  sendEvent(7, { uuid, message: chatContent.value });
+  chatContent.value = '';
+}
 
 function generateRandomMonsterPath() {
   const path = [];
@@ -240,7 +255,7 @@ function gameLoop() {
       );
       if (distance < tower.range) {
         tower.attack(monster);
-        sendEvent(77, { uuid, towerIndex, monsterIndex })
+        // sendEvent(77, { uuid, towerIndex, monsterIndex });
       }
     });
   });
@@ -293,6 +308,7 @@ function initGame() {
   if (isInitGame) {
     return;
   }
+  chattingCanvas.style.display = 'flex';
   bgm = new Audio('sounds/bgm.mp3');
   bgm.loop = true;
   bgm.volume = 0.2;
@@ -340,6 +356,15 @@ Promise.all([
     sendEvent(0, { token: serverSocket.auth.token, monsterPath, initialTowerCoords: towerCoords });
   });
 
+  serverSocket.on('chatContents', (data) => {
+    const user = data.uuid == uuid ? '나' : '상대방';
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `${user}: ${data.message}`;
+
+    scrollContainer.appendChild(newMessage);
+    console.log('추가 완료');
+  });
+
   serverSocket.on('addTower', (data) => {
     //상대방에게 타워값 받을 경우
     const tower = new Tower(data.opponentTower.x, data.opponentTower.y);
@@ -348,8 +373,8 @@ Promise.all([
   });
 
   serverSocket.on('towerAttackMonster', (data) => {
-    const tower = opponentTowers[data.towerIndex]
-    const monster = opponentMonsters[data.monsterIndex]
+    const tower = opponentTowers[data.towerIndex];
+    const monster = opponentMonsters[data.monsterIndex];
     tower.attack(monster);
   });
 
@@ -485,6 +510,7 @@ buyTowerButton.style.cursor = 'pointer';
 buyTowerButton.style.display = 'none';
 
 buyTowerButton.addEventListener('click', placeNewTower);
+chatButton.addEventListener('click', chatUpload);
 
 document.body.appendChild(buyTowerButton);
 
