@@ -1,5 +1,5 @@
 class User {
-  constructor(uuid, socket, payload) {
+  constructor(uuid, socket, payload, highScore) {
     this.uuid = uuid;
     this.userGold = 110; // 유저 골드
     this.base; // 기지 객체
@@ -11,7 +11,7 @@ class User {
     this.monsters = []; // 유저 몬스터 목록
     this.towers = []; // 유저 타워 목록
     this.score = 0; // 게임 점수
-    this.highScore = 0; // 기존 최고 점수
+    this.highScore = highScore; // 기존 최고 점수
     this.gameId;
     this.socket = socket;
   }
