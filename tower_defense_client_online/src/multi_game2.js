@@ -255,7 +255,7 @@ function gameLoop() {
       );
       if (distance < tower.range) {
         tower.attack(monster);
-        // sendEvent(77, { uuid, towerIndex, monsterIndex });
+        sendEvent(77, { uuid, towerIndex, monsterIndex });
       }
     });
   });
