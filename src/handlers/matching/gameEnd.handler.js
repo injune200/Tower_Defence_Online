@@ -1,12 +1,11 @@
-import { getGame } from "../../session/game.session.js";
-import { getUser } from "../../session/user.session.js";
+import { getAllGameSessions, getGame, removeGame } from "../../session/game.session.js";
+import { getAllUserSessions, getUser, removeUser } from "../../session/user.session.js";
 import { config } from '../../config/config.js';
 import { createClient } from "redis";
 
 export const gameEnd = async (socket, payload) => {
 
     const user = getUser(payload.uuid);
-
     const gameSession = getGame(user.gameId);
 
     if (payload.score > payload.highScore) {
@@ -25,11 +24,16 @@ export const gameEnd = async (socket, payload) => {
             highScore: payload.score
         }));
 
-        client.disconnect();
+        await client.disconnect();
     }
 
+    const existGameSession = await getGame(user.gameId)
 
+    if (existGameSession) {
+        removeGame(user.gameId)
+    }
 
+    removeUser(payload.uuid)
 
     return { status: 'success', message: '게임 종료 완료' }
 };
