@@ -12,6 +12,11 @@ let sequence = 0;
 let uuid;
 const numOfInitialTowers = 3; // 초기 타워 개수
 
+let levelUpCost = 100; // level up 비용
+let scorpionCost = 30; // Scorpion 비용
+let wizardCost = 50; // Wizard 비용
+let tankerCost = 100; // Tanker 비용
+
 let serverSocket;
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -24,7 +29,7 @@ const progressBarMessage = document.getElementById('progressBarMessage');
 const progressBar = document.getElementById('progressBar');
 const loader = document.getElementsByClassName('loader')[0];
 
-const NUM_OF_MONSTERS = 5; // 몬스터 개수
+export const NUM_OF_MONSTERS = 8; // 몬스터 개수
 // 게임 데이터
 let towerCost = 0; // 타워 구입 비용
 let monsterSpawnInterval = 0; // 몬스터 생성 주기
@@ -33,7 +38,7 @@ let monsterSpawnInterval = 0; // 몬스터 생성 주기
 let userGold = 0; // 유저 골드
 let base; // 기지 객체
 let baseHp = 0; // 기지 체력
-let monsterLevel = 0; // 몬스터 레벨
+let monsterLevel = 1; // 몬스터 레벨
 let monsterPath; // 몬스터 경로
 let initialTowerCoords; // 초기 타워 좌표
 let basePosition; // 기지 좌표
@@ -49,6 +54,7 @@ let opponentInitialTowerCoords; // 상대방 초기 타워 좌표
 let opponentBasePosition; // 상대방 기지 좌표
 const opponentMonsters = []; // 상대방 몬스터 목록
 const opponentTowers = []; // 상대방 타워 목록
+let opponentMonsterLevel = 1; // 상대방 Level
 
 let isInitGame = false;
 
@@ -199,7 +205,7 @@ function placeBase(position, isPlayer) {
 }
 
 function spawnMonster() {
-  const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
+  const newMonster = new Monster(monsterPath, monsterImages, opponentMonsterLevel);
   monsters.push(newMonster);
 
   sendEvent(5, {
@@ -240,7 +246,7 @@ function gameLoop() {
       );
       if (distance < tower.range) {
         tower.attack(monster);
-        sendEvent(77, { uuid, towerIndex, monsterIndex })
+        sendEvent(77, { uuid, towerIndex, monsterIndex });
       }
     });
   });
@@ -348,13 +354,13 @@ Promise.all([
   });
 
   serverSocket.on('towerAttackMonster', (data) => {
-    const tower = opponentTowers[data.towerIndex]
-    const monster = opponentMonsters[data.monsterIndex]
+    const tower = opponentTowers[data.towerIndex];
+    const monster = opponentMonsters[data.monsterIndex];
     tower.attack(monster);
   });
 
   serverSocket.on('response', (data) => {
-    console.log(data);
+    // console.log(data);
   });
 
   serverSocket.on('uuid', (data) => {
@@ -387,11 +393,37 @@ Promise.all([
         break;
       }
     }
+  });
 
-    serverSocket.on('opponentBaseAttacked', (data) => {
-      const { opponentBaseHp } = data;
-      opponentBase.hp = opponentBaseHp;
-    });
+  serverSocket.on('opponentBaseAttacked', (data) => {
+    const { opponentBaseHp } = data;
+    opponentBase.hp = opponentBaseHp;
+  });
+
+  serverSocket.on('opponentUserLevelUp', (data) => {
+    opponentMonsterLevel = data.opponentMonsterLevel;
+  });
+
+  serverSocket.on('spawnSpecialMonster', (data) => {
+    const type = data.type;
+    console.log(`Opponent user spawn ${type} in your game!`);
+    try {
+      switch (type) {
+        case 'Scorpion':
+          spawnSpecialMonster(8);
+          break;
+        case 'Wizard':
+          spawnSpecialMonster(6);
+          break;
+        case 'Tanker':
+          spawnSpecialMonster(7);
+          break;
+        default:
+          throw new Error('Special monster type is undefined');
+      }
+    } catch (err) {
+      console.error(err);
+    }
   });
 
   serverSocket.on('matchFound', (data) => {
@@ -410,6 +442,10 @@ Promise.all([
         progressBarContainer.style.display = 'none';
         progressBar.style.display = 'none';
         buyTowerButton.style.display = 'block';
+        levelUpButton.style.display = 'block';
+        spawnScorpionButton.style.display = 'block';
+        spawnWizardButton.style.display = 'block';
+        spawnTankerButton.style.display = 'block';
         canvas.style.display = 'block';
         opponentCanvas.style.display = 'block';
 
@@ -438,6 +474,7 @@ Promise.all([
         opponentMonsterPath = opponentUser.monsterPath;
         opponentInitialTowerCoords = opponentUser.initialTowerCoords;
         opponentBasePosition = opponentUser.basePosition;
+        opponentMonsterLevel = opponentUser.monsterLevel;
         for (const monster of opponentUser.monsters) {
           opponentMonsters.push(monster);
         }
@@ -487,6 +524,110 @@ buyTowerButton.style.display = 'none';
 buyTowerButton.addEventListener('click', placeNewTower);
 
 document.body.appendChild(buyTowerButton);
+
+// level up
+function levelUp() {
+  if (userGold < levelUpCost) {
+    alert(`골드가 부족합니다.\n필요 골드: ${levelUpCost}`);
+    return;
+  }
+  // userGold -= levelUpCost;
+  monsterLevel++;
+  levelUpCost += 10;
+  sendEvent(11, { uuid: uuid, monsterLevel });
+}
+const levelUpButton = document.createElement('button');
+levelUpButton.textContent = 'Level Up';
+levelUpButton.style.position = 'absolute';
+levelUpButton.style.top = '60px';
+levelUpButton.style.right = '10px';
+levelUpButton.style.padding = '10px 20px';
+levelUpButton.style.fontSize = '16px';
+levelUpButton.style.cursor = 'pointer';
+levelUpButton.style.display = 'none';
+
+levelUpButton.addEventListener('click', levelUp);
+
+document.body.appendChild(levelUpButton);
+
+function spawnSpecialMonster(type) {
+  const newMonster = new Monster(monsterPath, monsterImages, opponentMonsterLevel, type);
+  monsters.push(newMonster);
+
+  sendEvent(5, {
+    uuid: uuid,
+    monsterData: newMonster,
+  });
+}
+
+// Spawn scorpion in opponent game
+function spawnScorpion() {
+  if (userGold < scorpionCost) {
+    alert(`골드가 부족합니다.\n필요 골드: ${scorpionCost}`);
+    return;
+  }
+  // userGold -= scorpionCost;
+  sendEvent(55, { uuid: uuid, type: 'Scorpion' });
+}
+const spawnScorpionButton = document.createElement('button');
+spawnScorpionButton.textContent = 'Scorpion';
+spawnScorpionButton.style.position = 'absolute';
+spawnScorpionButton.style.top = '110px';
+spawnScorpionButton.style.right = '10px';
+spawnScorpionButton.style.padding = '10px 20px';
+spawnScorpionButton.style.fontSize = '16px';
+spawnScorpionButton.style.cursor = 'pointer';
+spawnScorpionButton.style.display = 'none';
+
+spawnScorpionButton.addEventListener('click', spawnScorpion);
+
+document.body.appendChild(spawnScorpionButton);
+
+// Spawn wizard in opponent game
+function spawnWizard() {
+  if (userGold < wizardCost) {
+    alert(`골드가 부족합니다.\n필요 골드: ${wizardCost}`);
+    return;
+  }
+  // userGold -= wizardCost;
+  sendEvent(55, { uuid: uuid, type: 'Wizard' });
+}
+const spawnWizardButton = document.createElement('button');
+spawnWizardButton.textContent = 'Wizard';
+spawnWizardButton.style.position = 'absolute';
+spawnWizardButton.style.top = '160px';
+spawnWizardButton.style.right = '10px';
+spawnWizardButton.style.padding = '10px 20px';
+spawnWizardButton.style.fontSize = '16px';
+spawnWizardButton.style.cursor = 'pointer';
+spawnWizardButton.style.display = 'none';
+
+spawnWizardButton.addEventListener('click', spawnWizard);
+
+document.body.appendChild(spawnWizardButton);
+
+// Spawn tanker in opponent game
+function spawnTanker() {
+  if (userGold < tankerCost) {
+    alert(`골드가 부족합니다.\n필요 골드: ${tankerCost}`);
+    return;
+  }
+  // userGold -= tankerCost;
+  sendEvent(55, { uuid: uuid, type: 'Tanker' });
+}
+const spawnTankerButton = document.createElement('button');
+spawnTankerButton.textContent = 'Tanker';
+spawnTankerButton.style.position = 'absolute';
+spawnTankerButton.style.top = '210px';
+spawnTankerButton.style.right = '10px';
+spawnTankerButton.style.padding = '10px 20px';
+spawnTankerButton.style.fontSize = '16px';
+spawnTankerButton.style.cursor = 'pointer';
+spawnTankerButton.style.display = 'none';
+
+spawnTankerButton.addEventListener('click', spawnTanker);
+
+document.body.appendChild(spawnTankerButton);
 
 export const sendEvent = (handlerId, payload) => {
   serverSocket.emit('event', {

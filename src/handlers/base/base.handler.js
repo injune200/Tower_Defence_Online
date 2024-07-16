@@ -1,7 +1,7 @@
 import { getGame } from '../../session/game.session.js';
 import { getUser } from '../../session/user.session.js';
 
-export const baseAttackedHandler = (socket, payload) => {
+export const baseAttacked = async (socket, payload) => {
   const user = getUser(payload.uuid);
   if (!user) {
     return { status: 'fail', message: '존재하지 않는 유저 입니다.' };
