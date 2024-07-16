@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
@@ -23,6 +23,41 @@
       #opponentCanvas {
         border: 2px solid #000;
         display: none;
+      }
+      #chattingCanvas {
+        display: none;
+        padding-top: 20px;
+        width: 1500px;
+        height: 300px;
+        border: 2px solid #000;
+        align-items: center;
+        flex-direction: column;
+      }
+      #scrollContainer {
+        width: 1200px;
+        height: 200px;
+        border: 1px solid #ccc;
+        overflow: auto;
+      }
+      #chatContentBox {
+        width: 1200px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: row;
+      }
+      #chatContent {
+      width: 90%;
+      height: 60px;
+      font-size: 24px;
+      padding: 5px;
+      box-sizing: border-box; /
+      }
+      #chatButton {
+        height: 60px;
+        margin: 20px;
+        font-size: 32px;
       }
       .button-container {
         display: flex;
@@ -75,54 +110,48 @@
       <img src="/images/logo.png" alt="logo" />
       <button id="registerButton">회원가입</button>
       <button id="loginButton">로그인</button>
-      <button id="loginButton2">
-        로그인2 (로컬에서 2인 테스트 할 때 사용)
-      </button>
+      <button id="loginButton2">로그인2 (로컬에서 2인 테스트 할 때 사용)</button>
       <button id="matchButton">다른 유저와 대결하기</button>
-      <button id="matchButton2">
-        다른 유저와 대결하기2 (로컬에서 2인 테스트 할 때 사용)
-      </button>
+      <button id="matchButton2">다른 유저와 대결하기2 (로컬에서 2인 테스트 할 때 사용)</button>
     </div>
     <div id="progressBarContainer">
-      <h1 id="progressBarMessage" style="color: white">
-        대결 상대를 탐색중입니다!
-      </h1>
+      <h1 id="progressBarMessage" style="color: white">대결 상대를 탐색중입니다!</h1>
       <div class="loader"></div>
-      <progress
-        id="progressBar"
-        max="100"
-        value="0"
-        style="display: none"
-      ></progress>
+      <progress id="progressBar" max="100" value="0" style="display: none"></progress>
     </div>
     <canvas id="gameCanvas" width="1500" height="680"></canvas>
     <canvas id="opponentCanvas" width="1500" height="680"></canvas>
+    <div id="chattingCanvas">
+      <div id="scrollContainer"></div>
+      <div id="chatContentBox">
+        <input id="chatContent" type="text" required minlength="4" maxlength="300" size="120" />
+        <button id="chatButton" type="button">채팅</button>
+      </div>
+    </div>
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script type="module">
-      document
-        .getElementById("registerButton")
-        .addEventListener("click", () => {
-          window.location.href = "register.html";
-        });
-
-      document.getElementById("loginButton").addEventListener("click", () => {
-        window.location.href = "login.html";
+      document.getElementById('registerButton').addEventListener('click', () => {
+        window.location.href = 'register.html';
       });
 
-      document.getElementById("loginButton2").addEventListener("click", () => {
-        window.location.href = "login2.html";
+      document.getElementById('loginButton').addEventListener('click', () => {
+        window.location.href = 'login.html';
       });
 
-      document.getElementById("matchButton").addEventListener("click", () => {
-        document.querySelector(".button-container").style.display = "none";
-        document.getElementById("progressBarContainer").style.display = "block";
-        import("./src/multi_game.js");
+      document.getElementById('loginButton2').addEventListener('click', () => {
+        window.location.href = 'login2.html';
       });
 
-      document.getElementById("matchButton2").addEventListener("click", () => {
-        document.querySelector(".button-container").style.display = "none";
-        document.getElementById("progressBarContainer").style.display = "block";
-        import("./src/multi_game2.js");
+      document.getElementById('matchButton').addEventListener('click', () => {
+        document.querySelector('.button-container').style.display = 'none';
+        document.getElementById('progressBarContainer').style.display = 'block';
+        import('./src/multi_game.js');
+      });
+
+      document.getElementById('matchButton2').addEventListener('click', () => {
+        document.querySelector('.button-container').style.display = 'none';
+        document.getElementById('progressBarContainer').style.display = 'block';
+        import('./src/multi_game2.js');
       });
     </script>
   </body>
