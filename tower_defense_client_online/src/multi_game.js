@@ -1,6 +1,7 @@
 import { Base } from './base.js';
 import { Monster } from './monster.js';
 import { Tower } from './tower.js';
+import { customMonsterData } from './customMonster.js';
 
 if (!localStorage.getItem('token')) {
   alert('로그인이 필요합니다.');
@@ -11,11 +12,14 @@ const version = '1.0.0';
 let sequence = 0;
 let uuid;
 const numOfInitialTowers = 3; // 초기 타워 개수
+let powerOverwhelming = false;
+let opponentPowerOverwhelming = false;
 
 let levelUpCost = 100; // level up 비용
 let scorpionCost = 30; // Scorpion 비용
 let wizardCost = 50; // Wizard 비용
 let tankerCost = 100; // Tanker 비용
+let spawnCoolDown = 30; // 0.5초 쿨타임 (초당 60프레임)
 
 let serverSocket;
 const canvas = document.getElementById('gameCanvas');
@@ -54,7 +58,7 @@ const towers = []; // 유저 타워 목록
 let score = 0; // 게임 점수
 let highScore = 0; // 기존 최고 점수
 let maxTowerNum = 10;
-let currentTowerNum = towers.length;
+let currentTowerNum = towers.length; // 현재 타워 수
 
 // 상대 데이터
 let opponentBase; // 상대방 기지 객체
@@ -102,7 +106,27 @@ function chatUpload() {
     scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
+  if (chatContent.value == '/show me the money') {
+    userGold += 1000;
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: show me the money`;
 
+    scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    chatContent.value = '';
+    return;
+  }
+  if (chatContent.value == '/power overwhelming') {
+    powerOverwhelming = true;
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: power overwhelming`;
+
+    scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    chatContent.value = '';
+    sendEvent(88, { uuid });
+    return;
+  }
   sendEvent(7, { uuid, message: chatContent.value });
   chatContent.value = '';
 }
@@ -204,7 +228,7 @@ function placeInitialTowers(initialTowerCoords, initialTowers, context) {
     const tower = new Tower(towerCoords.x, towerCoords.y);
     initialTowers.push(tower);
     tower.draw(context, towerImages);
-    currentTowerNum = towers.length
+    currentTowerNum = towers.length;
   });
 }
 
@@ -231,7 +255,7 @@ function placeNewTower() {
   const tower = new Tower(x, y);
   towers.push(tower);
   tower.draw(ctx, towerImages);
-  currentTowerNum = towers.length
+  currentTowerNum = towers.length;
   userGold -= towerCost;
   sendEvent(66, { uuid, tower, userGold });
 }
@@ -247,7 +271,12 @@ function placeBase(position, isPlayer) {
 }
 
 function spawnMonster() {
-  const newMonster = new Monster(monsterPath, monsterImages, opponentMonsterLevel);
+  const newMonster = new Monster(
+    customMonsterData,
+    monsterPath,
+    monsterImages,
+    opponentMonsterLevel,
+  );
   monsters.push(newMonster);
 
   sendEvent(5, {
@@ -258,6 +287,7 @@ function spawnMonster() {
 
 function gameLoop() {
   // 렌더링 시에는 항상 배경 이미지부터 그려야 합니다! 그래야 다른 이미지들이 배경 이미지 위에 그려져요!
+  currentTowerNum = towers.length;
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height); // 배경 이미지 다시 그리기
   drawPath(monsterPath, ctx); // 경로 다시 그리기
 
@@ -276,9 +306,9 @@ function gameLoop() {
   for (const monster of monsters) {
     monster.draw(ctx);
   }
-  for (const monster of opponentMonsters) {
-    monster.draw(opponentCtx, true);
-  }
+  // for (const monster of opponentMonsters) {
+  //   monster.draw(opponentCtx);
+  // }
 
   // 타워 그리기 및 몬스터 공격 처리
   towers.forEach((tower, towerIndex) => {
@@ -289,7 +319,7 @@ function gameLoop() {
         Math.pow(tower.x - monster.x, 2) + Math.pow(tower.y - monster.y, 2),
       );
       if (distance < tower.range) {
-        tower.attack(monster);
+        tower.attack(monster, opponentPowerOverwhelming);
         sendEvent(77, { uuid, towerIndex, monsterIndex });
       }
     });
@@ -301,30 +331,63 @@ function gameLoop() {
   for (let i = monsters.length - 1; i >= 0; i--) {
     const monster = monsters[i];
     if (monster.hp > 0) {
-      const Attacked = monster.move();
+      let Attacked;
+      if (monster.monsterNumber === 6) {
+        if (monster.attackingTower) {
+          if (monster.target !== towers[monster.targetTowerIndex]) {
+            // 공격중이던 타워를 다른 Wizard가 부심
+            monster.charging = monster.chargingTime;
+            monster.attackingTower = false;
+          }
+          if (monster.charging <= 0) {
+            towers.splice(monster.targetTowerIndex, 1);
+            sendEvent(44, { uuid, towerIndex: monster.targetTowerIndex, monsterIndex: i });
+            monster.charging = monster.chargingTime;
+            monster.attackingTower = false;
+          } else {
+            monster.charging--;
+          }
+          Attacked = false;
+        } else {
+          for (let towerIndex = 0; towerIndex < towers.length; towerIndex++) {
+            const tower = towers[towerIndex];
+            const distance = Math.sqrt(
+              Math.pow(tower.x - monster.x, 2) + Math.pow(tower.y - monster.y, 2),
+            );
+            if (distance < monster.range) {
+              monster.attackTower(tower, towerIndex);
+              break;
+            }
+          }
+          if (!monster.attackingTower) {
+            Attacked = monster.move();
+          } else Attacked = false;
+        }
+      } else Attacked = monster.move();
+
       if (Attacked) {
         const attackedSound = new Audio('sounds/attacked.wav');
         attackedSound.volume = 0.3;
         attackedSound.play();
         // TODO. 몬스터가 기지를 공격했을 때 서버로 이벤트 전송
-        baseHp -= monster.attackPower;
-        base.hp -= monster.attackPower;
+        baseHp -= powerOverwhelming ? 0 : monster.attackPower;
+        base.hp -= powerOverwhelming ? 0 : monster.attackPower;
         sendEvent(33, { uuid, attackedPower: monster.attackPower, baseHp });
-        sendEvent(6, { uuid: uuid, monsterData: monster });
+        sendEvent(6, { uuid: uuid, monsterIndex: i });
         monsters.splice(i, 1);
       }
     } else {
       // TODO. 몬스터 사망 이벤트 전송
-      sendEvent(6, { uuid: uuid, monsterData: monster });
+      sendEvent(6, { uuid: uuid, monsterIndex: i });
       monsters.splice(i, 1);
       userGold += 100;
-      score += 100
-      sendEvent(10, { uuid, userGold, score })
+      score += 100;
+      sendEvent(10, { uuid, userGold, score });
     }
   }
 
   if (baseHp <= 0) {
-    sendEvent(98, { uuid })
+    sendEvent(98, { uuid });
   }
 
   // 상대방 게임 화면 업데이트
@@ -336,14 +399,42 @@ function gameLoop() {
     tower.updateCooldown(); // 적 타워의 쿨다운 업데이트
   });
 
-  opponentMonsters.forEach((monster) => {
-    monster.move();
-    monster.draw(opponentCtx, true);
-  });
+  for (let monsterIndex = 0; monsterIndex < opponentMonsters.length; monsterIndex++) {
+    const monster = opponentMonsters[monsterIndex];
+    if (monster.monsterNumber === 6) {
+      if (monster.attackingTower) {
+        if (monster.target !== towers[monster.targetTowerIndex]) {
+          // 공격중이던 타워를 다른 Wizard가 부심
+          monster.attackingTower = false;
+        }
+      } else {
+        for (let towerIndex = 0; towerIndex < opponentTowers.length; towerIndex++) {
+          const opponentTower = opponentTowers[towerIndex];
+          const distance = Math.sqrt(
+            Math.pow(opponentTower.x - monster.x, 2) + Math.pow(opponentTower.y - monster.y, 2),
+          );
+          if (distance < monster.range) {
+            monster.attackTower(opponentTower, towerIndex);
+            break;
+          }
+        }
+        if (!monster.attackingTower) {
+          monster.move();
+        }
+      }
+    } else {
+      monster.move();
+    }
+    monster.draw(opponentCtx);
+  }
 
   opponentBase.draw(opponentCtx, baseImage, true);
 
   requestAnimationFrame(gameLoop); // 지속적으로 다음 프레임에 gameLoop 함수 호출할 수 있도록 함
+
+  if (spawnCoolDown > 0) {
+    spawnCoolDown--;
+  }
 }
 
 function initGame() {
@@ -422,7 +513,7 @@ Promise.all([
   serverSocket.on('towerAttackMonster', (data) => {
     const tower = opponentTowers[data.towerIndex];
     const monster = opponentMonsters[data.monsterIndex];
-    tower.attack(monster);
+    tower.attack(monster, opponentPowerOverwhelming);
   });
 
   serverSocket.on('response', (data) => {
@@ -433,8 +524,16 @@ Promise.all([
     uuid = data;
   });
 
+  serverSocket.on('towerRemoved', (data) => {
+    const towerIndex = data.towerIndex;
+    const monsterIndex = data.monsterIndex;
+    opponentTowers.splice(towerIndex, 1);
+    opponentMonsters[monsterIndex].attackingTower = false;
+  });
+
   serverSocket.on('createOpponentMonster', (data) => {
     const opponentMonster = new Monster(
+      customMonsterData,
       opponentMonsterPath,
       monsterImages,
       data.payload.level,
@@ -446,19 +545,9 @@ Promise.all([
   });
 
   serverSocket.on('removeOpponentMonster', (data) => {
-    const { monsterNumber, hp, level, creationTime } = data.payload;
+    const monsterIndex = data.monsterIndex;
 
-    for (let i = 0; i < opponentMonsters.length; i++) {
-      const monster = opponentMonsters[i];
-      if (
-        monster.monsterNumber == monsterNumber &&
-        monster.level == level &&
-        monster.creationTime == creationTime
-      ) {
-        opponentMonsters.splice(i, 1);
-        break;
-      }
-    }
+    opponentMonsters.splice(monsterIndex, 1);
   });
 
   serverSocket.on('opponentBaseAttacked', (data) => {
@@ -468,6 +557,14 @@ Promise.all([
 
   serverSocket.on('opponentUserLevelUp', (data) => {
     opponentMonsterLevel = data.opponentMonsterLevel;
+  });
+
+  serverSocket.on('powerOverwhelming', () => {
+    opponentPowerOverwhelming = true;
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `Opponent User set power overwhelming`;
+    scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
   });
 
   serverSocket.on('spawnSpecialMonster', (data) => {
@@ -566,14 +663,14 @@ Promise.all([
       winSound.play().then(() => {
         alert('당신이 게임에서 승리했습니다!');
         // TODO. 게임 종료 이벤트 전송
-        sendEvent(99, { uuid, highScore, score })
+        sendEvent(99, { uuid, highScore, score });
         location.reload();
       });
     } else {
       loseSound.play().then(() => {
         alert('아쉽지만 대결에서 패배하셨습니다! 다음 대결에서는 꼭 이기세요!');
         // TODO. 게임 종료 이벤트 전송
-        sendEvent(99, { uuid, highScore, score })
+        sendEvent(99, { uuid, highScore, score });
         location.reload();
       });
     }
@@ -625,7 +722,13 @@ levelUpButton.addEventListener('click', levelUp);
 document.body.appendChild(levelUpButton);
 
 function spawnSpecialMonster(type) {
-  const newMonster = new Monster(monsterPath, monsterImages, opponentMonsterLevel, type);
+  const newMonster = new Monster(
+    customMonsterData,
+    monsterPath,
+    monsterImages,
+    opponentMonsterLevel,
+    type,
+  );
   monsters.push(newMonster);
 
   sendEvent(5, {
@@ -636,14 +739,17 @@ function spawnSpecialMonster(type) {
 
 // Spawn scorpion in opponent game
 function spawnScorpion() {
+  if (spawnCoolDown > 0) {
+    return;
+  }
   if (userGold < scorpionCost) {
     const newMessage = document.createElement('p');
     newMessage.textContent = `system: 골드가 부족합니다.\n필요 골드: ${scorpionCost}`;
-
     scrollContainer.appendChild(newMessage);
     scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
+  spawnCoolDown = 30;
   // userGold -= scorpionCost;
   sendEvent(55, { uuid: uuid, type: 'Scorpion' });
 }
@@ -663,14 +769,17 @@ document.body.appendChild(spawnScorpionButton);
 
 // Spawn wizard in opponent game
 function spawnWizard() {
+  if (spawnCoolDown > 0) {
+    return;
+  }
   if (userGold < wizardCost) {
     const newMessage = document.createElement('p');
-    newMessage.textContent = `system: 골드가 부족합니다.\n필요 골드: ${wizardCost}`;
-
+    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${wizardCost}`;
     scrollContainer.appendChild(newMessage);
     scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
+  spawnCoolDown = 30;
   // userGold -= wizardCost;
   sendEvent(55, { uuid: uuid, type: 'Wizard' });
 }
@@ -690,14 +799,17 @@ document.body.appendChild(spawnWizardButton);
 
 // Spawn tanker in opponent game
 function spawnTanker() {
+  if (spawnCoolDown > 0) {
+    return;
+  }
   if (userGold < tankerCost) {
     const newMessage = document.createElement('p');
-    newMessage.textContent = `system: 골드가 부족합니다.\n필요 골드: ${tankerCost}`;
-
+    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${tankerCost}`;
     scrollContainer.appendChild(newMessage);
     scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
+  spawnCoolDown = 30;
   // userGold -= tankerCost;
   sendEvent(55, { uuid: uuid, type: 'Tanker' });
 }
@@ -728,12 +840,12 @@ function upgradeTowers() {
     if (tower.level < 6) {
       upgradeTowerNumList.push(index);
     }
-  })
+  });
   if (upgradeTowerNumList.length != 0) {
     const upgradeTowerNum = Math.floor(Math.random() * upgradeTowerNumList.length);
     towers[upgradeTowerNumList[upgradeTowerNum]].level += 1;
     userGold -= towerUpgradeCost;
-    sendEvent(67, { uuid, towerIndex: upgradeTowerNumList[upgradeTowerNum], userGold })
+    sendEvent(67, { uuid, towerIndex: upgradeTowerNumList[upgradeTowerNum], userGold });
   } else {
     const newMessage = document.createElement('p');
     newMessage.textContent = `system: 업그레이드 가능한 타워가 없습니다.`;
@@ -741,7 +853,6 @@ function upgradeTowers() {
     scrollContainer.appendChild(newMessage);
     return;
   }
-
 }
 const upgradeTowersButton = document.createElement('button');
 upgradeTowersButton.textContent = 'Upgrade';
