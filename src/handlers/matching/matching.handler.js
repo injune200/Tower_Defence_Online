@@ -3,7 +3,7 @@ import { addGame, getAllGameSessions } from '../../session/game.session.js';
 import { addUser } from '../../session/user.session.js';
 import { authorization } from '../authorization/authorization.js';
 import { gameStartHandler } from './gameStart.handler.js';
-import { createClient } from "redis";
+import { createClient } from 'redis';
 import { config } from '../../config/config.js';
 
 export const waitForMatch = async (socket, payload) => {
@@ -16,13 +16,13 @@ export const waitForMatch = async (socket, payload) => {
     socket: {
       host: config.redis.redisHost,
       port: config.redis.redisPort,
-    }
+    },
   });
 
   await client.connect();
 
   const userData = await client.get(uuid);
-  const highScore = await JSON.parse(userData).highScore
+  const highScore = await JSON.parse(userData).highScore;
 
   await client.disconnect();
 

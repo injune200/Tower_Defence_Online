@@ -36,8 +36,10 @@ const progressBar = document.getElementById('progressBar');
 const loader = document.getElementsByClassName('loader')[0];
 
 export const NUM_OF_MONSTERS = 8; // 몬스터 개수
+const NUM_OF_TOWERS = 6;
 // 게임 데이터
 let towerCost = 0; // 타워 구입 비용
+let towerUpgradeCost = 100;
 let monsterSpawnInterval = 0; // 몬스터 생성 주기
 
 // 유저 데이터
@@ -52,6 +54,8 @@ const monsters = []; // 유저 몬스터 목록
 const towers = []; // 유저 타워 목록
 let score = 0; // 게임 점수
 let highScore = 0; // 기존 최고 점수
+let maxTowerNum = 10;
+let currentTowerNum = towers.length;
 
 // 상대 데이터
 let opponentBase; // 상대방 기지 객체
@@ -68,8 +72,12 @@ let isInitGame = false;
 const backgroundImage = new Image();
 backgroundImage.src = 'images/bg.webp';
 
-const towerImage = new Image();
-towerImage.src = 'images/tower.png';
+const towerImages = [];
+for (let i = 1; i <= NUM_OF_TOWERS; i++) {
+  const img = new Image();
+  img.src = `images/tower${i}.png`;
+  towerImages.push(img);
+}
 
 const baseImage = new Image();
 baseImage.src = 'images/base.png';
@@ -88,7 +96,11 @@ let bgm;
 
 function chatUpload() {
   if (chatContent.value.trim() == '') {
-    alert('아무런 내용이 없습니다.');
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 아무런 내용이 없습니다.`;
+
+    scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
 
@@ -103,20 +115,20 @@ function generateRandomMonsterPath() {
 
   path.push({ x: currentX, y: currentY });
 
-  while (currentX < canvas.width) {
+  while (currentX < canvas.width - 50) {
     currentX += Math.floor(Math.random() * 100) + 50; // 50 ~ 150 범위의 x 증가
     // x 좌표에 대한 clamp 처리
-    if (currentX > canvas.width) {
-      currentX = canvas.width;
+    if (currentX > canvas.width - 50) {
+      currentX = canvas.width - 50;
     }
 
     currentY += Math.floor(Math.random() * 200) - 100; // -100 ~ 100 범위의 y 변경
     // y 좌표에 대한 clamp 처리
-    if (currentY < 0) {
-      currentY = 0;
+    if (currentY < 50) {
+      currentY = 50;
     }
-    if (currentY > canvas.height) {
-      currentY = canvas.height;
+    if (currentY > canvas.height - 50) {
+      currentY = canvas.height - 50;
     }
 
     path.push({ x: currentX, y: currentY });
@@ -192,22 +204,37 @@ function placeInitialTowers(initialTowerCoords, initialTowers, context) {
   initialTowerCoords.forEach((towerCoords) => {
     const tower = new Tower(towerCoords.x, towerCoords.y);
     initialTowers.push(tower);
-    tower.draw(context, towerImage);
+    tower.draw(context, towerImages);
+    currentTowerNum = towers.length;
   });
 }
 
 function placeNewTower() {
   // 타워를 구입할 수 있는 자원이 있을 때 타워 구입 후 랜덤 배치
   if (userGold < towerCost) {
-    alert('골드가 부족합니다.');
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 골드가 부족합니다.`;
+
+    scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    return;
+  }
+  if (maxTowerNum <= currentTowerNum) {
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 더 이상 타워를 세울 수 없습니다.`;
+
+    scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
 
-  const { x, y } = getRandomPositionNearPath(200);
+  const { x, y } = getRandomPositionNearPath(50);
   const tower = new Tower(x, y);
   towers.push(tower);
-  tower.draw(ctx, towerImage);
-  sendEvent(66, { uuid, tower });
+  tower.draw(ctx, towerImages);
+  currentTowerNum = towers.length;
+  userGold -= towerCost;
+  sendEvent(66, { uuid, tower, userGold });
 }
 
 function placeBase(position, isPlayer) {
@@ -244,6 +271,8 @@ function gameLoop() {
   ctx.fillText(`골드: ${userGold}`, 100, 150); // 골드 표시
   ctx.fillStyle = 'black';
   ctx.fillText(`현재 레벨: ${monsterLevel}`, 100, 200); // 최고 기록 표시
+  ctx.fillStyle = 'purple';
+  ctx.fillText(`타워 개수: ${currentTowerNum}/${maxTowerNum}`, 100, 250); // 타워 개수 표시
 
   for (const monster of monsters) {
     monster.draw(ctx);
@@ -254,7 +283,7 @@ function gameLoop() {
 
   // 타워 그리기 및 몬스터 공격 처리
   towers.forEach((tower, towerIndex) => {
-    tower.draw(ctx, towerImage);
+    tower.draw(ctx, towerImages);
     tower.updateCooldown();
     monsters.forEach((monster, monsterIndex) => {
       const distance = Math.sqrt(
@@ -323,13 +352,13 @@ function gameLoop() {
       sendEvent(6, { uuid: uuid, monsterIndex: i });
       monsters.splice(i, 1);
       userGold += 100;
-      score += 100
-      sendEvent(10, { uuid, userGold, score })
+      score += 100;
+      sendEvent(10, { uuid, userGold, score });
     }
   }
 
   if (baseHp <= 0) {
-    sendEvent(98, { uuid })
+    sendEvent(98, { uuid });
   }
 
   // 상대방 게임 화면 업데이트
@@ -337,7 +366,7 @@ function gameLoop() {
   drawPath(opponentMonsterPath, opponentCtx); // 상대방 경로 다시 그리기
 
   opponentTowers.forEach((tower) => {
-    tower.draw(opponentCtx, towerImage);
+    tower.draw(opponentCtx, towerImages);
     tower.updateCooldown(); // 적 타워의 쿨다운 업데이트
   });
 
@@ -399,7 +428,7 @@ function initGame() {
 // 이미지 로딩 완료 후 서버와 연결하고 게임 초기화
 Promise.all([
   new Promise((resolve) => (backgroundImage.onload = resolve)),
-  new Promise((resolve) => (towerImage.onload = resolve)),
+  ...towerImages.map((img) => new Promise((resolve) => (img.onload = resolve))),
   new Promise((resolve) => (baseImage.onload = resolve)),
   new Promise((resolve) => (pathImage.onload = resolve)),
   ...monsterImages.map((img) => new Promise((resolve) => (img.onload = resolve))),
@@ -425,7 +454,7 @@ Promise.all([
     }
     const towerCoords = [];
     for (let i = 0; i < numOfInitialTowers; i++) {
-      const { x, y } = getRandomPositionNearPath(200);
+      const { x, y } = getRandomPositionNearPath(50);
       towerCoords.push({ x, y });
     }
     sendEvent(0, { token: serverSocket.auth.token, monsterPath, initialTowerCoords: towerCoords });
@@ -444,7 +473,12 @@ Promise.all([
     //상대방에게 타워값 받을 경우
     const tower = new Tower(data.opponentTower.x, data.opponentTower.y);
     opponentTowers.push(tower);
-    tower.draw(opponentCtx, towerImage);
+    tower.draw(opponentCtx, towerImages);
+  });
+
+  serverSocket.on('towerUpgrade', (data) => {
+    //상대방에게 타워값 받을 경우
+    opponentTowers[data.towerIndex].level += 1;
   });
 
   serverSocket.on('towerAttackMonster', (data) => {
@@ -537,6 +571,7 @@ Promise.all([
         spawnScorpionButton.style.display = 'block';
         spawnWizardButton.style.display = 'block';
         spawnTankerButton.style.display = 'block';
+        upgradeTowersButton.style.display = 'block';
         canvas.style.display = 'block';
         opponentCanvas.style.display = 'block';
 
@@ -590,14 +625,14 @@ Promise.all([
       winSound.play().then(() => {
         alert('당신이 게임에서 승리했습니다!');
         // TODO. 게임 종료 이벤트 전송
-        sendEvent(99, { uuid, highScore, score })
+        sendEvent(99, { uuid, highScore, score });
         location.reload();
       });
     } else {
       loseSound.play().then(() => {
         alert('아쉽지만 대결에서 패배하셨습니다! 다음 대결에서는 꼭 이기세요!');
         // TODO. 게임 종료 이벤트 전송
-        sendEvent(99, { uuid, highScore, score })
+        sendEvent(99, { uuid, highScore, score });
         location.reload();
       });
     }
@@ -623,8 +658,10 @@ document.body.appendChild(buyTowerButton);
 function levelUp() {
   if (userGold < levelUpCost) {
     const newMessage = document.createElement('p');
-    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${levelUpCost}`;
+    newMessage.textContent = `system: 골드가 부족합니다.\n필요 골드: ${levelUpCost}`;
+
     scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
   // userGold -= levelUpCost;
@@ -663,8 +700,9 @@ function spawnScorpion() {
   }
   if (userGold < scorpionCost) {
     const newMessage = document.createElement('p');
-    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${scorpionCost}`;
+    newMessage.textContent = `system: 골드가 부족합니다.\n필요 골드: ${scorpionCost}`;
     scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
   spawnCoolDown = 30;
@@ -694,6 +732,7 @@ function spawnWizard() {
     const newMessage = document.createElement('p');
     newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${wizardCost}`;
     scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
   spawnCoolDown = 30;
@@ -723,6 +762,7 @@ function spawnTanker() {
     const newMessage = document.createElement('p');
     newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${tankerCost}`;
     scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
   spawnCoolDown = 30;
@@ -742,6 +782,47 @@ spawnTankerButton.style.display = 'none';
 spawnTankerButton.addEventListener('click', spawnTanker);
 
 document.body.appendChild(spawnTankerButton);
+
+function upgradeTowers() {
+  if (userGold < towerUpgradeCost) {
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 타워 업그레이드 비용이 부족합니다.`;
+
+    scrollContainer.appendChild(newMessage);
+    return;
+  }
+  let upgradeTowerNumList = [];
+  towers.forEach((tower, index) => {
+    if (tower.level < 6) {
+      upgradeTowerNumList.push(index);
+    }
+  });
+  if (upgradeTowerNumList.length != 0) {
+    const upgradeTowerNum = Math.floor(Math.random() * upgradeTowerNumList.length);
+    towers[upgradeTowerNumList[upgradeTowerNum]].level += 1;
+    userGold -= towerUpgradeCost;
+    sendEvent(67, { uuid, towerIndex: upgradeTowerNumList[upgradeTowerNum], userGold });
+  } else {
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 업그레이드 가능한 타워가 없습니다.`;
+
+    scrollContainer.appendChild(newMessage);
+    return;
+  }
+}
+const upgradeTowersButton = document.createElement('button');
+upgradeTowersButton.textContent = 'Upgrade';
+upgradeTowersButton.style.position = 'absolute';
+upgradeTowersButton.style.top = '260px';
+upgradeTowersButton.style.right = '10px';
+upgradeTowersButton.style.padding = '10px 20px';
+upgradeTowersButton.style.fontSize = '16px';
+upgradeTowersButton.style.cursor = 'pointer';
+upgradeTowersButton.style.display = 'none';
+
+upgradeTowersButton.addEventListener('click', upgradeTowers);
+
+document.body.appendChild(upgradeTowersButton);
 
 export const sendEvent = (handlerId, payload) => {
   serverSocket.emit('event', {
