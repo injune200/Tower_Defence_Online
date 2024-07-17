@@ -702,7 +702,7 @@ function levelUp() {
     scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
-  // userGold -= levelUpCost;
+  userGold -= levelUpCost;
   monsterLevel++;
   levelUpCost += 10;
   sendEvent(11, { uuid: uuid, monsterLevel });
@@ -750,7 +750,7 @@ function spawnScorpion() {
     return;
   }
   spawnCoolDown = 30;
-  // userGold -= scorpionCost;
+  userGold -= scorpionCost;
   sendEvent(55, { uuid: uuid, type: 'Scorpion' });
 }
 const spawnScorpionButton = document.createElement('button');
@@ -780,7 +780,7 @@ function spawnWizard() {
     return;
   }
   spawnCoolDown = 30;
-  // userGold -= wizardCost;
+  userGold -= wizardCost;
   sendEvent(55, { uuid: uuid, type: 'Wizard' });
 }
 const spawnWizardButton = document.createElement('button');
@@ -810,7 +810,7 @@ function spawnTanker() {
     return;
   }
   spawnCoolDown = 30;
-  // userGold -= tankerCost;
+  userGold -= tankerCost;
   sendEvent(55, { uuid: uuid, type: 'Tanker' });
 }
 const spawnTankerButton = document.createElement('button');
