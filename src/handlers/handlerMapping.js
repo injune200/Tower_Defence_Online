@@ -9,6 +9,7 @@ import { writeChat } from './chat/chat.handler.js';
 import { baseAttacked } from './base/base.handler.js';
 import { levelUp } from './level/levelUp.handler.js';
 import { spawnSpecialMonster } from './monster/spawnSpecialMonster.handler.js';
+import { towerUpgrade } from './tower/towerUpgrade.handler.js';
 
 const handlerMappings = {
   0: waitForMatch,
@@ -20,6 +21,7 @@ const handlerMappings = {
   33: baseAttacked,
   55: spawnSpecialMonster,
   66: addTower,
+  67: towerUpgrade,
   77: towerAttackMonster,
   98: baseOver,
   99: gameEnd

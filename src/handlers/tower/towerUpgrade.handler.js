@@ -1,20 +1,21 @@
 import { getGame } from "../../session/game.session.js";
 import { getUser } from "../../session/user.session.js"
 
-export const addTower = async (socket, payload) => {
+
+export const towerUpgrade = async (socket, payload) => {
     const user = getUser(payload.uuid);
 
     if (!user) {
         return { status: 'fail', message: '존재하지 않는 유저 입니다.' };
     }
 
-    user.towers.push(payload.tower)
-    user.userGold = payload.userGold;
-
-    const gameSession = await getGame(user.gameId);
+    const gameSession = getGame(user.gameId);
     const opponentUser = gameSession.getOpponentUser(payload.uuid);
+    user.userGold = payload.userGold
 
-    opponentUser.socket.emit('addTower', { opponentTower: payload.tower })
+    opponentUser.socket.emit('towerUpgrade', {
+        towerIndex: payload.towerIndex,
+    });
 
-    return { status: 'success', message: '타워 좌표 전송 완료' }
-}
+    return { status: 'success', message: '타워 업그레이드 데이터 전송 완료' };
+};
