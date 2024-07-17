@@ -207,7 +207,7 @@ function placeInitialTowers(initialTowerCoords, initialTowers, context) {
     const tower = new Tower(towerCoords.x, towerCoords.y);
     initialTowers.push(tower);
     tower.draw(context, towerImages);
-    currentTowerNum = towers.length
+    currentTowerNum = towers.length;
   });
 }
 
@@ -234,7 +234,7 @@ function placeNewTower() {
   const tower = new Tower(x, y);
   towers.push(tower);
   tower.draw(ctx, towerImages);
-  currentTowerNum = towers.length
+  currentTowerNum = towers.length;
   userGold -= towerCost;
   sendEvent(66, { uuid, tower, userGold });
 }
@@ -634,7 +634,13 @@ levelUpButton.addEventListener('click', levelUp);
 document.body.appendChild(levelUpButton);
 
 function spawnSpecialMonster(type) {
-  const newMonster = new Monster(monsterPath, monsterImages, opponentMonsterLevel, type);
+  const newMonster = new Monster(
+    customMonsterData,
+    monsterPath,
+    monsterImages,
+    opponentMonsterLevel,
+    type,
+  );
   monsters.push(newMonster);
 
   sendEvent(5, {
@@ -737,12 +743,12 @@ function upgradeTowers() {
     if (tower.level < 6) {
       upgradeTowerNumList.push(index);
     }
-  })
+  });
   if (upgradeTowerNumList.length != 0) {
     const upgradeTowerNum = Math.floor(Math.random() * upgradeTowerNumList.length);
     towers[upgradeTowerNumList[upgradeTowerNum]].level += 1;
     userGold -= towerUpgradeCost;
-    sendEvent(67, { uuid, towerIndex: upgradeTowerNumList[upgradeTowerNum], userGold })
+    sendEvent(67, { uuid, towerIndex: upgradeTowerNumList[upgradeTowerNum], userGold });
   } else {
     const newMessage = document.createElement('p');
     newMessage.textContent = `system: 업그레이드 가능한 타워가 없습니다.`;
@@ -750,7 +756,6 @@ function upgradeTowers() {
     scrollContainer.appendChild(newMessage);
     return;
   }
-
 }
 const upgradeTowersButton = document.createElement('button');
 upgradeTowersButton.textContent = 'Upgrade';
