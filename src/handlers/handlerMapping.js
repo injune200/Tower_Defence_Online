@@ -11,6 +11,7 @@ import { levelUp } from './level/levelUp.handler.js';
 import { spawnSpecialMonster } from './monster/spawnSpecialMonster.handler.js';
 import { towerRemoved } from './tower/towerRemoved.handler.js';
 import { towerUpgrade } from './tower/towerUpgrade.handler.js';
+import { powerOverwhelming } from './cheat/powerOverwhelming.handler.js';
 
 const handlerMappings = {
   0: waitForMatch,
@@ -25,6 +26,7 @@ const handlerMappings = {
   66: addTower,
   67: towerUpgrade,
   77: towerAttackMonster,
+  88: powerOverwhelming,
   98: baseOver,
   99: gameEnd,
 };

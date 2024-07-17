@@ -1,7 +1,15 @@
 const NUM_OF_MONSTERS = 8;
 
 export class Monster {
-  constructor(path, monsterImages, level, monsterNumber, isOpponent = false, payload = null) {
+  constructor(
+    gameAssets,
+    path,
+    monsterImages,
+    level,
+    monsterNumber,
+    isOpponent = false,
+    payload = null,
+  ) {
     // 생성자 안에서 몬스터의 속성을 정의한다고 생각하시면 됩니다!
     if (!path || path.length <= 0) {
       throw new Error('몬스터가 이동할 경로가 필요합니다.');
@@ -36,41 +44,50 @@ export class Monster {
       this.attackPower = payload.attackPower; // 몬스터의 공격력 (기지에 가해지는 데미지)
       this.creationTime = payload.creationTime;
     }
+
     // New Monster
-    if (this.monsterNumber >= 6) {
-      if (this.monsterNumber === 8) {
-        // Scorpion
-        this.width = 20;
-        this.height = 20;
-        this.speed = 5;
+    switch (this.monsterNumber) {
+      case 8:
+        this.width = gameAssets.scorpion.width;
+        this.height = gameAssets.scorpion.height;
+        this.speed = gameAssets.scorpion.speed;
         if (!isOpponent) {
-          this.maxHp = 50 + 10 * level;
+          this.maxHp = gameAssets.scorpion.hp + 10 * level;
           this.hp = this.maxHp;
         }
-      } else {
-        if (this.monsterNumber === 6) {
-          // Wizard
-          this.width = 60;
-          this.height = 60;
-          this.maxHp = 20000 + 10 * level;
-          this.hp = this.maxHp;
-          this.chargingTime = 600; // 10초
-          for (let i = 1; i <= level; i++) {
-            // level 당 chargingTime 10% 차감 ex) 10 9 8.1 7.3 6.5 5.8 5.2 4.7 4.2 3.8 3.5
-            this.chargingTime *= 0.9;
-          }
-          this.charging = this.chargingTime;
-          // range는 100부터 시작하여 level당 +5, 최대 200
-          this.range = 90 + Math.min(10 * level, 200);
-          this.attackingTower = false;
-        } else {
-          // Tanker
-          this.width = 80;
-          this.height = 80;
-          this.maxHp = 500 + 10 * level;
+        break;
+
+      case 7:
+        this.width = gameAssets.tanker.width;
+        this.height = gameAssets.tanker.height;
+        this.speed = gameAssets.tanker.speed;
+        if (!isOpponent) {
+          this.maxHp = gameAssets.tanker.hp + 50 * level;
           this.hp = this.maxHp;
         }
-      }
+        break;
+
+      case 6:
+        this.width = gameAssets.wizard.width;
+        this.height = gameAssets.wizard.height;
+        this.speed = gameAssets.wizard.speed;
+        if (!isOpponent) {
+          this.maxHp = gameAssets.wizard.hp + 10 * level;
+          this.hp = this.maxHp;
+        }
+        this.chargingTime = 600; // 10초
+        for (let i = 1; i <= level; i++) {
+          // level 당 chargingTime 10% 차감 ex) 10 9 8.1 7.3 6.5 5.8 5.2 4.7 4.2 3.8 3.5
+          this.chargingTime *= 0.95;
+        }
+        this.charging = this.chargingTime;
+        // range는 100부터 시작하여 level당 +5, 최대 150
+        this.range = 95 + Math.min(5 * level, 150);
+        this.attackingTower = false;
+        break;
+
+      default:
+        break;
     }
   }
 
@@ -104,6 +121,8 @@ export class Monster {
   }
 
   draw(ctx) {
+    if (this.monsterNumber >= 6)
+      console.log('@@@@', this.image, this.x, this.y, this.width, this.height);
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     ctx.font = '12px Arial';
     ctx.fillStyle = 'white';

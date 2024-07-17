@@ -1,6 +1,7 @@
 import { Base } from './base.js';
 import { Monster } from './monster.js';
 import { Tower } from './tower.js';
+import { customMonsterData } from './customMonster.js';
 
 if (!localStorage.getItem('token')) {
   alert('로그인이 필요합니다.');
@@ -11,6 +12,8 @@ const version = '1.0.0';
 let sequence = 0;
 let uuid;
 const numOfInitialTowers = 3; // 초기 타워 개수
+let powerOverwhelming = false;
+let opponentPowerOverwhelming = false;
 
 let levelUpCost = 100; // level up 비용
 let scorpionCost = 30; // Scorpion 비용
@@ -55,7 +58,7 @@ const towers = []; // 유저 타워 목록
 let score = 0; // 게임 점수
 let highScore = 0; // 기존 최고 점수
 let maxTowerNum = 10;
-let currentTowerNum = towers.length;
+let currentTowerNum = towers.length; // 현재 타워 수
 
 // 상대 데이터
 let opponentBase; // 상대방 기지 객체
@@ -103,7 +106,27 @@ function chatUpload() {
     scrollContainer.scrollTop = scrollContainer.scrollHeight;
     return;
   }
+  if (chatContent.value == '/show me the money') {
+    userGold += 1000;
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: show me the money`;
 
+    scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    chatContent.value = '';
+    return;
+  }
+  if (chatContent.value == '/power overwhelming') {
+    powerOverwhelming = true;
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: power overwhelming`;
+
+    scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    chatContent.value = '';
+    sendEvent(88, { uuid });
+    return;
+  }
   sendEvent(7, { uuid, message: chatContent.value });
   chatContent.value = '';
 }
@@ -248,7 +271,12 @@ function placeBase(position, isPlayer) {
 }
 
 function spawnMonster() {
-  const newMonster = new Monster(monsterPath, monsterImages, opponentMonsterLevel);
+  const newMonster = new Monster(
+    customMonsterData,
+    monsterPath,
+    monsterImages,
+    opponentMonsterLevel,
+  );
   monsters.push(newMonster);
 
   sendEvent(5, {
@@ -259,6 +287,7 @@ function spawnMonster() {
 
 function gameLoop() {
   // 렌더링 시에는 항상 배경 이미지부터 그려야 합니다! 그래야 다른 이미지들이 배경 이미지 위에 그려져요!
+  currentTowerNum = towers.length;
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height); // 배경 이미지 다시 그리기
   drawPath(monsterPath, ctx); // 경로 다시 그리기
 
@@ -290,7 +319,7 @@ function gameLoop() {
         Math.pow(tower.x - monster.x, 2) + Math.pow(tower.y - monster.y, 2),
       );
       if (distance < tower.range) {
-        tower.attack(monster);
+        tower.attack(monster, opponentPowerOverwhelming);
         sendEvent(77, { uuid, towerIndex, monsterIndex });
       }
     });
@@ -341,8 +370,8 @@ function gameLoop() {
         attackedSound.volume = 0.3;
         attackedSound.play();
         // TODO. 몬스터가 기지를 공격했을 때 서버로 이벤트 전송
-        baseHp -= monster.attackPower;
-        base.hp -= monster.attackPower;
+        baseHp -= powerOverwhelming ? 0 : monster.attackPower;
+        base.hp -= powerOverwhelming ? 0 : monster.attackPower;
         sendEvent(33, { uuid, attackedPower: monster.attackPower, baseHp });
         sendEvent(6, { uuid: uuid, monsterIndex: i });
         monsters.splice(i, 1);
@@ -484,7 +513,7 @@ Promise.all([
   serverSocket.on('towerAttackMonster', (data) => {
     const tower = opponentTowers[data.towerIndex];
     const monster = opponentMonsters[data.monsterIndex];
-    tower.attack(monster);
+    tower.attack(monster, opponentPowerOverwhelming);
   });
 
   serverSocket.on('response', (data) => {
@@ -504,6 +533,7 @@ Promise.all([
 
   serverSocket.on('createOpponentMonster', (data) => {
     const opponentMonster = new Monster(
+      customMonsterData,
       opponentMonsterPath,
       monsterImages,
       data.payload.level,
@@ -527,6 +557,14 @@ Promise.all([
 
   serverSocket.on('opponentUserLevelUp', (data) => {
     opponentMonsterLevel = data.opponentMonsterLevel;
+  });
+
+  serverSocket.on('powerOverwhelming', () => {
+    opponentPowerOverwhelming = true;
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `Opponent User set power overwhelming`;
+    scrollContainer.appendChild(newMessage);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
   });
 
   serverSocket.on('spawnSpecialMonster', (data) => {
@@ -684,7 +722,13 @@ levelUpButton.addEventListener('click', levelUp);
 document.body.appendChild(levelUpButton);
 
 function spawnSpecialMonster(type) {
-  const newMonster = new Monster(monsterPath, monsterImages, opponentMonsterLevel, type);
+  const newMonster = new Monster(
+    customMonsterData,
+    monsterPath,
+    monsterImages,
+    opponentMonsterLevel,
+    type,
+  );
   monsters.push(newMonster);
 
   sendEvent(5, {
