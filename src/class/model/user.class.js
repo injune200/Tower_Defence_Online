@@ -1,7 +1,7 @@
 class User {
   constructor(uuid, socket, payload) {
     this.uuid = uuid;
-    this.userGold = 110; // 유저 골드
+    this.userGold = 1000; // 유저 골드
     this.base; // 기지 객체
     this.baseHp = 1000; // 기지 체력
     this.monsterLevel = 1; // 몬스터 레벨

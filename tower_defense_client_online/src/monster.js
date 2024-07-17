@@ -48,18 +48,27 @@ export class Monster {
           this.hp = this.maxHp;
         }
       } else {
-        this.width = 40;
-        this.height = 40;
-        if (!isOpponent) {
-          if (this.monsterNumber === 6) {
-            // Wizard
-            this.maxHp = 200 + 10 * level;
-            this.hp = this.maxHp;
-          } else {
-            // Tanker
-            this.maxHp = 500 + 10 * level;
-            this.hp = this.maxHp;
+        if (this.monsterNumber === 6) {
+          // Wizard
+          this.width = 60;
+          this.height = 60;
+          this.maxHp = 20000 + 10 * level;
+          this.hp = this.maxHp;
+          this.chargingTime = 600; // 10초
+          for (let i = 1; i <= level; i++) {
+            // level 당 chargingTime 10% 차감 ex) 10 9 8.1 7.3 6.5 5.8 5.2 4.7 4.2 3.8 3.5
+            this.chargingTime *= 0.9;
           }
+          this.charging = this.chargingTime;
+          // range는 100부터 시작하여 level당 +5, 최대 200
+          this.range = 90 + Math.min(10 * level, 200);
+          this.attackingTower = false;
+        } else {
+          // Tanker
+          this.width = 80;
+          this.height = 80;
+          this.maxHp = 500 + 10 * level;
+          this.hp = this.maxHp;
         }
       }
     }
@@ -94,12 +103,25 @@ export class Monster {
     }
   }
 
-  draw(ctx, isOpponent = false) {
+  draw(ctx) {
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
-    if (true) {
-      ctx.font = '12px Arial';
-      ctx.fillStyle = 'white';
-      ctx.fillText(`(레벨 ${this.level}) ${this.hp}/${this.maxHp}`, this.x, this.y - 5);
+    ctx.font = '12px Arial';
+    ctx.fillStyle = 'white';
+    ctx.fillText(`(레벨 ${this.level}) ${this.hp}/${this.maxHp}`, this.x, this.y - 5);
+    if (this.attackingTower && this.target) {
+      ctx.beginPath();
+      ctx.moveTo(this.x + this.width / 2, this.y + this.height / 2);
+      ctx.lineTo(this.target.x + this.target.width / 2, this.target.y + this.target.height / 2);
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 10;
+      ctx.stroke();
+      ctx.closePath();
     }
+  }
+
+  attackTower(tower, towerIndex) {
+    this.target = tower;
+    this.targetTowerIndex = towerIndex;
+    this.attackingTower = true;
   }
 }

@@ -248,9 +248,9 @@ function gameLoop() {
   for (const monster of monsters) {
     monster.draw(ctx);
   }
-  for (const monster of opponentMonsters) {
-    monster.draw(opponentCtx, true);
-  }
+  // for (const monster of opponentMonsters) {
+  //   monster.draw(opponentCtx);
+  // }
 
   // 타워 그리기 및 몬스터 공격 처리
   towers.forEach((tower, towerIndex) => {
@@ -273,7 +273,40 @@ function gameLoop() {
   for (let i = monsters.length - 1; i >= 0; i--) {
     const monster = monsters[i];
     if (monster.hp > 0) {
-      const Attacked = monster.move();
+      let Attacked;
+      if (monster.monsterNumber === 6) {
+        if (monster.attackingTower) {
+          if (monster.target !== towers[monster.targetTowerIndex]) {
+            // 공격중이던 타워를 다른 Wizard가 부심
+            monster.charging = monster.chargingTime;
+            monster.attackingTower = false;
+          }
+          if (monster.charging <= 0) {
+            towers.splice(monster.targetTowerIndex, 1);
+            sendEvent(44, { uuid, towerIndex: monster.targetTowerIndex, monsterIndex: i });
+            monster.charging = monster.chargingTime;
+            monster.attackingTower = false;
+          } else {
+            monster.charging--;
+          }
+          Attacked = false;
+        } else {
+          for (let towerIndex = 0; towerIndex < towers.length; towerIndex++) {
+            const tower = towers[towerIndex];
+            const distance = Math.sqrt(
+              Math.pow(tower.x - monster.x, 2) + Math.pow(tower.y - monster.y, 2),
+            );
+            if (distance < monster.range) {
+              monster.attackTower(tower, towerIndex);
+              break;
+            }
+          }
+          if (!monster.attackingTower) {
+            Attacked = monster.move();
+          } else Attacked = false;
+        }
+      } else Attacked = monster.move();
+
       if (Attacked) {
         const attackedSound = new Audio('sounds/attacked.wav');
         attackedSound.volume = 0.3;
@@ -282,12 +315,12 @@ function gameLoop() {
         baseHp -= monster.attackPower;
         base.hp -= monster.attackPower;
         sendEvent(33, { uuid, attackedPower: monster.attackPower, baseHp });
-        sendEvent(6, { uuid: uuid, monsterData: monster });
+        sendEvent(6, { uuid: uuid, monsterIndex: i });
         monsters.splice(i, 1);
       }
     } else {
       // TODO. 몬스터 사망 이벤트 전송
-      sendEvent(6, { uuid: uuid, monsterData: monster });
+      sendEvent(6, { uuid: uuid, monsterIndex: i });
       monsters.splice(i, 1);
     }
   }
@@ -301,10 +334,34 @@ function gameLoop() {
     tower.updateCooldown(); // 적 타워의 쿨다운 업데이트
   });
 
-  opponentMonsters.forEach((monster) => {
-    monster.move();
-    monster.draw(opponentCtx, true);
-  });
+  for (let monsterIndex = 0; monsterIndex < opponentMonsters.length; monsterIndex++) {
+    const monster = opponentMonsters[monsterIndex];
+    if (monster.monsterNumber === 6) {
+      if (monster.attackingTower) {
+        if (monster.target !== towers[monster.targetTowerIndex]) {
+          // 공격중이던 타워를 다른 Wizard가 부심
+          monster.attackingTower = false;
+        }
+      } else {
+        for (let towerIndex = 0; towerIndex < opponentTowers.length; towerIndex++) {
+          const opponentTower = opponentTowers[towerIndex];
+          const distance = Math.sqrt(
+            Math.pow(opponentTower.x - monster.x, 2) + Math.pow(opponentTower.y - monster.y, 2),
+          );
+          if (distance < monster.range) {
+            monster.attackTower(opponentTower, towerIndex);
+            break;
+          }
+        }
+        if (!monster.attackingTower) {
+          monster.move();
+        }
+      }
+    } else {
+      monster.move();
+    }
+    monster.draw(opponentCtx);
+  }
 
   opponentBase.draw(opponentCtx, baseImage, true);
 
@@ -397,6 +454,13 @@ Promise.all([
     uuid = data;
   });
 
+  serverSocket.on('towerRemoved', (data) => {
+    const towerIndex = data.towerIndex;
+    const monsterIndex = data.monsterIndex;
+    opponentTowers.splice(towerIndex, 1);
+    opponentMonsters[monsterIndex].attackingTower = false;
+  });
+
   serverSocket.on('createOpponentMonster', (data) => {
     const opponentMonster = new Monster(
       opponentMonsterPath,
@@ -410,19 +474,9 @@ Promise.all([
   });
 
   serverSocket.on('removeOpponentMonster', (data) => {
-    const { monsterNumber, hp, level, creationTime } = data.payload;
+    const monsterIndex = data.monsterIndex;
 
-    for (let i = 0; i < opponentMonsters.length; i++) {
-      const monster = opponentMonsters[i];
-      if (
-        monster.monsterNumber == monsterNumber &&
-        monster.level == level &&
-        monster.creationTime == creationTime
-      ) {
-        opponentMonsters.splice(i, 1);
-        break;
-      }
-    }
+    opponentMonsters.splice(monsterIndex, 1);
   });
 
   serverSocket.on('opponentBaseAttacked', (data) => {

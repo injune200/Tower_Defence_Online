@@ -32,41 +32,21 @@ export const responseMonster = async (socket, payload) => {
 
 export const removeMonster = (socket, payload) => {
   const { uuid } = payload;
-  const { monsterNumber, hp, level, creationTime } = payload.monsterData;
+  const monsterIndex = payload.monsterIndex;
   const user = getUser(uuid);
 
   if (!user)
     return { status: 'fail', message: '존재하지 않는 유저 또는 유효하지 않은 요청입니다.' };
 
-  let isExistMonster = null;
-  for (let monster of user.monsters) {
-    if (
-      monsterNumber == monster.monsterNumber &&
-      level == monster.level &&
-      creationTime == monster.creationTime
-    ) {
-      isExistMonster = monster;
-      break;
-    }
+  user.monsters.splice(monsterIndex, 1);
+  try {
+    const gameSession = getGame(user.gameId);
+    const opponentUser = gameSession.getOpponentUser(uuid);
+    opponentUser.socket.emit('removeOpponentMonster', { monsterIndex });
+  } catch (err) {
+    console.log(err);
+    return { status: 'fail', message: `서버 내의 오류 발생` };
   }
 
-  if (isExistMonster) {
-    for (let i = 0; i < user.monsters.length; i++) {
-      if (user.monsters[i] == isExistMonster) {
-        user.monsters.splice(i, 1);
-        try {
-          const gameSession = getGame(user.gameId);
-          const opponentUser = gameSession.getOpponentUser(uuid);
-          opponentUser.socket.emit('removeOpponentMonster', { payload: payload.monsterData });
-        } catch (err) {
-          console.log(err);
-          return { status: 'fail', message: `서버 내의 오류 발생` };
-        }
-
-        return { status: 'success', message: '몬스터 삭제 완료' };
-      }
-    }
-  }
-
-  return { status: 'fail', message: '존재하지 않는 몬스터 기록입니다.' };
+  return { status: 'success', message: '몬스터 삭제 완료' };
 };
