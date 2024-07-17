@@ -2,7 +2,6 @@ import { getGame } from "../../session/game.session.js";
 import { getUser } from "../../session/user.session.js"
 
 export const addTower = async (socket, payload) => {
-    console.log('타워추가 실행됨')
     const user = getUser(payload.uuid);
 
     if (!user) {
