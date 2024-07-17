@@ -115,6 +115,7 @@ export class Monster {
   }
 
   draw(ctx, isOpponent = false) {
+    console.log('@@@@', this.image, this.x, this.y, this.width, this.height);
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     if (true) {
       ctx.font = '12px Arial';

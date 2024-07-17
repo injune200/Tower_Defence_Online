@@ -595,7 +595,13 @@ levelUpButton.addEventListener('click', levelUp);
 document.body.appendChild(levelUpButton);
 
 function spawnSpecialMonster(type) {
-  const newMonster = new Monster(monsterPath, monsterImages, opponentMonsterLevel, type);
+  const newMonster = new Monster(
+    gameAssets,
+    monsterPath,
+    monsterImages,
+    opponentMonsterLevel,
+    type,
+  );
   monsters.push(newMonster);
 
   sendEvent(5, {
