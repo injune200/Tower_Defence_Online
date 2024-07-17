@@ -1,7 +1,15 @@
 const NUM_OF_MONSTERS = 8;
 
 export class Monster {
-  constructor(path, monsterImages, level, monsterNumber, isOpponent = false, payload = null) {
+  constructor(
+    gameAssets,
+    path,
+    monsterImages,
+    level,
+    monsterNumber,
+    isOpponent = false,
+    payload = null,
+  ) {
     // 생성자 안에서 몬스터의 속성을 정의한다고 생각하시면 됩니다!
     if (!path || path.length <= 0) {
       throw new Error('몬스터가 이동할 경로가 필요합니다.');
@@ -37,31 +45,43 @@ export class Monster {
       this.creationTime = payload.creationTime;
     }
     // New Monster
-    if (this.monsterNumber >= 6) {
-      if (this.monsterNumber === 8) {
-        // Scorpion
-        this.width = 20;
-        this.height = 20;
-        this.speed = 5;
+
+    console.log('몬스터 생성!', `몬스터 넘버는? : ${this.monsterNumber}`); //test
+    switch (this.monsterNumber) {
+      case 8:
+        this.width = gameAssets.scorpion.width;
+        this.height = gameAssets.scorpion.height;
+        this.speed = gameAssets.scorpion.speed;
         if (!isOpponent) {
-          this.maxHp = 50 + 10 * level;
+          this.maxHp = gameAssets.scorpion.data[level - 1].hp;
           this.hp = this.maxHp;
         }
-      } else {
-        this.width = 40;
-        this.height = 40;
+        console.log(`스콜피언 생성 : hp=${this.hp}, level=${level}`);
+        break;
+
+      case 7:
+        this.width = gameAssets.tanker.width;
+        this.height = gameAssets.tanker.height;
+        this.speed = gameAssets.tanker.speed;
         if (!isOpponent) {
-          if (this.monsterNumber === 6) {
-            // Wizard
-            this.maxHp = 200 + 10 * level;
-            this.hp = this.maxHp;
-          } else {
-            // Tanker
-            this.maxHp = 500 + 10 * level;
-            this.hp = this.maxHp;
-          }
+          this.maxHp = gameAssets.tanker.data[level - 1].hp;
+          this.hp = this.maxHp;
         }
-      }
+        console.log(`탱커 생성 : hp=${this.hp}, level=${level}`);
+        break;
+
+      case 6:
+        this.width = gameAssets.wizard.width;
+        this.height = gameAssets.wizard.height;
+        this.speed = gameAssets.wizard.speed;
+        if (!isOpponent) {
+          this.maxHp = gameAssets.wizard.data[level - 1].hp;
+          this.hp = this.maxHp;
+        }
+        console.log(`위자드 생성 : hp=${this.hp}, level=${level}`);
+        break;
+      default:
+        break;
     }
   }
 

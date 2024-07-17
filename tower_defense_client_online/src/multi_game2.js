@@ -1,6 +1,7 @@
 import { Base } from './base.js';
 import { Monster } from './monster.js';
 import { Tower } from './tower.js';
+import { customMonsterData } from './customMonster.js';
 
 if (!localStorage.getItem('token2')) {
   alert('로그인이 필요합니다.');
@@ -33,6 +34,8 @@ const progressBarContainer = document.getElementById('progressBarContainer');
 const progressBarMessage = document.getElementById('progressBarMessage');
 const progressBar = document.getElementById('progressBar');
 const loader = document.getElementsByClassName('loader')[0];
+
+export let gameAssets;
 
 export const NUM_OF_MONSTERS = 8; // 몬스터 개수
 // 게임 데이터
@@ -220,7 +223,12 @@ function placeBase(position, isPlayer) {
 }
 
 function spawnMonster() {
-  const newMonster = new Monster(monsterPath, monsterImages, opponentMonsterLevel);
+  const newMonster = new Monster(
+    customMonsterData,
+    monsterPath,
+    monsterImages,
+    opponentMonsterLevel,
+  );
   monsters.push(newMonster);
 
   sendEvent(5, {
@@ -289,13 +297,13 @@ function gameLoop() {
       sendEvent(6, { uuid: uuid, monsterData: monster });
       monsters.splice(i, 1);
       userGold += 100;
-      score += 100
-      sendEvent(10, { uuid, userGold, score })
+      score += 100;
+      sendEvent(10, { uuid, userGold, score });
     }
   }
 
   if (baseHp <= 0) {
-    sendEvent(98, { uuid })
+    sendEvent(98, { uuid });
   }
 
   // 상대방 게임 화면 업데이트
@@ -401,6 +409,7 @@ Promise.all([
 
   serverSocket.on('createOpponentMonster', (data) => {
     const opponentMonster = new Monster(
+      customMonsterData,
       opponentMonsterPath,
       monsterImages,
       data.payload.level,
@@ -531,14 +540,14 @@ Promise.all([
       winSound.play().then(() => {
         alert('당신이 게임에서 승리했습니다!');
         // TODO. 게임 종료 이벤트 전송
-        sendEvent(99, { uuid, highScore, score })
+        sendEvent(99, { uuid, highScore, score });
         location.reload();
       });
     } else {
       loseSound.play().then(() => {
         alert('아쉽지만 대결에서 패배하셨습니다! 다음 대결에서는 꼭 이기세요!');
         // TODO. 게임 종료 이벤트 전송
-        sendEvent(99, { uuid, highScore, score })
+        sendEvent(99, { uuid, highScore, score });
         location.reload();
       });
     }
