@@ -36,6 +36,10 @@ const registerHandler = router.post("/register", async (req, res) => {
             uuid
         }));
 
+        await client.set(uuid, JSON.stringify({
+            highScore: 0
+        }));
+
         await client.disconnect();
 
         res.status(201).json({
