@@ -10,6 +10,7 @@ export const addTower = async (socket, payload) => {
     }
 
     user.towers.push(payload.tower)
+    user.userGold = payload.userGold;
 
     const gameSession = await getGame(user.gameId);
     const opponentUser = gameSession.getOpponentUser(payload.uuid);

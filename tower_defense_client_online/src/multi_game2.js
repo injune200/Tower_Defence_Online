@@ -233,7 +233,7 @@ function placeNewTower() {
   tower.draw(ctx, towerImages);
   currentTowerNum = towers.length
   userGold -= towerCost;
-  sendEvent(66, { uuid, tower });
+  sendEvent(66, { uuid, tower, userGold });
 }
 
 function placeBase(position, isPlayer) {
@@ -724,7 +724,7 @@ function upgradeTowers() {
     const upgradeTowerNum = Math.floor(Math.random() * upgradeTowerNumList.length);
     towers[upgradeTowerNumList[upgradeTowerNum]].level += 1;
     userGold -= towerUpgradeCost;
-    sendEvent(67, { uuid, towerIndex: upgradeTowerNumList[upgradeTowerNum] })
+    sendEvent(67, { uuid, towerIndex: upgradeTowerNumList[upgradeTowerNum], userGold })
   } else {
     const newMessage = document.createElement('p');
     newMessage.textContent = `system: 업그레이드 가능한 타워가 없습니다.`;

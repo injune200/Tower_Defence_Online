@@ -37,7 +37,7 @@ const loader = document.getElementsByClassName('loader')[0];
 export const NUM_OF_MONSTERS = 8; // 몬스터 개수
 const NUM_OF_TOWERS = 6;
 // 게임 데이터
-let towerCost = 100; // 타워 구입 비용
+let towerCost = 0; // 타워 구입 비용
 let towerUpgradeCost = 100;
 let monsterSpawnInterval = 0; // 몬스터 생성 주기
 
@@ -233,7 +233,7 @@ function placeNewTower() {
   tower.draw(ctx, towerImages);
   currentTowerNum = towers.length
   userGold -= towerCost;
-  sendEvent(66, { uuid, tower });
+  sendEvent(66, { uuid, tower, userGold });
 }
 
 function placeBase(position, isPlayer) {
@@ -724,7 +724,7 @@ function upgradeTowers() {
     const upgradeTowerNum = Math.floor(Math.random() * upgradeTowerNumList.length);
     towers[upgradeTowerNumList[upgradeTowerNum]].level += 1;
     userGold -= towerUpgradeCost;
-    sendEvent(67, { uuid, towerIndex: upgradeTowerNumList[upgradeTowerNum] })
+    sendEvent(67, { uuid, towerIndex: upgradeTowerNumList[upgradeTowerNum], userGold })
   } else {
     const newMessage = document.createElement('p');
     newMessage.textContent = `system: 업그레이드 가능한 타워가 없습니다.`;

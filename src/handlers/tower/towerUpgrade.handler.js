@@ -11,6 +11,7 @@ export const towerUpgrade = async (socket, payload) => {
 
     const gameSession = getGame(user.gameId);
     const opponentUser = gameSession.getOpponentUser(payload.uuid);
+    user.userGold = payload.userGold
 
     opponentUser.socket.emit('towerUpgrade', {
         towerIndex: payload.towerIndex,
