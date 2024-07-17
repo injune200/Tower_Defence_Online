@@ -121,8 +121,6 @@ export class Monster {
   }
 
   draw(ctx) {
-    if (this.monsterNumber >= 6)
-      console.log('@@@@', this.image, this.x, this.y, this.width, this.height);
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     ctx.font = '12px Arial';
     ctx.fillStyle = 'white';

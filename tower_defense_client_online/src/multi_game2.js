@@ -299,7 +299,7 @@ function gameLoop() {
   ctx.fillStyle = 'yellow';
   ctx.fillText(`골드: ${userGold}`, 100, 150); // 골드 표시
   ctx.fillStyle = 'black';
-  ctx.fillText(`현재 레벨: ${monsterLevel}`, 100, 200); // 최고 기록 표시
+  ctx.fillText(`상대 진영 몬스터 레벨: ${monsterLevel}`, 100, 200); // 최고 기록 표시
   ctx.fillStyle = 'purple';
   ctx.fillText(`타워 개수: ${currentTowerNum}/${maxTowerNum}`, 100, 250); // 타워 개수 표시
 
