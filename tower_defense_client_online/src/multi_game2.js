@@ -13,9 +13,9 @@ let uuid;
 const numOfInitialTowers = 3; // 초기 타워 개수
 
 let levelUpCost = 100; // level up 비용
-let scorpionCost = 50; // Scorpion 비용
+let scorpionCost = 30; // Scorpion 비용
 let wizardCost = 50; // Wizard 비용
-let tankerCost = 50; // Tanker 비용
+let tankerCost = 100; // Tanker 비용
 
 let serverSocket;
 const canvas = document.getElementById('gameCanvas');
@@ -554,7 +554,9 @@ document.body.appendChild(buyTowerButton);
 // level up
 function levelUp() {
   if (userGold < levelUpCost) {
-    alert(`골드가 부족합니다.\n필요 골드: ${levelUpCost}`);
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${levelUpCost}`;
+    scrollContainer.appendChild(newMessage);
     return;
   }
   // userGold -= levelUpCost;
@@ -589,7 +591,9 @@ function spawnSpecialMonster(type) {
 // Spawn scorpion in opponent game
 function spawnScorpion() {
   if (userGold < scorpionCost) {
-    alert(`골드가 부족합니다.\n필요 골드: ${scorpionCost}`);
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${scorpionCost}`;
+    scrollContainer.appendChild(newMessage);
     return;
   }
   // userGold -= scorpionCost;
@@ -612,7 +616,9 @@ document.body.appendChild(spawnScorpionButton);
 // Spawn wizard in opponent game
 function spawnWizard() {
   if (userGold < wizardCost) {
-    alert(`골드가 부족합니다.\n필요 골드: ${wizardCost}`);
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${wizardCost}`;
+    scrollContainer.appendChild(newMessage);
     return;
   }
   // userGold -= wizardCost;
@@ -635,7 +641,9 @@ document.body.appendChild(spawnWizardButton);
 // Spawn tanker in opponent game
 function spawnTanker() {
   if (userGold < tankerCost) {
-    alert(`골드가 부족합니다.\n필요 골드: ${tankerCost}`);
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${tankerCost}`;
+    scrollContainer.appendChild(newMessage);
     return;
   }
   // userGold -= tankerCost;

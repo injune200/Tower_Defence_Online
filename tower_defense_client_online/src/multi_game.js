@@ -16,6 +16,7 @@ let levelUpCost = 100; // level up 비용
 let scorpionCost = 30; // Scorpion 비용
 let wizardCost = 50; // Wizard 비용
 let tankerCost = 100; // Tanker 비용
+let spawnCoolDown = 30; // 0.5초 쿨타임 (초당 60프레임)
 
 let serverSocket;
 const canvas = document.getElementById('gameCanvas');
@@ -308,6 +309,10 @@ function gameLoop() {
   opponentBase.draw(opponentCtx, baseImage, true);
 
   requestAnimationFrame(gameLoop); // 지속적으로 다음 프레임에 gameLoop 함수 호출할 수 있도록 함
+
+  if (spawnCoolDown > 0) {
+    spawnCoolDown--;
+  }
 }
 
 function initGame() {
@@ -554,7 +559,9 @@ document.body.appendChild(buyTowerButton);
 // level up
 function levelUp() {
   if (userGold < levelUpCost) {
-    alert(`골드가 부족합니다.\n필요 골드: ${levelUpCost}`);
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${levelUpCost}`;
+    scrollContainer.appendChild(newMessage);
     return;
   }
   // userGold -= levelUpCost;
@@ -588,10 +595,16 @@ function spawnSpecialMonster(type) {
 
 // Spawn scorpion in opponent game
 function spawnScorpion() {
-  if (userGold < scorpionCost) {
-    alert(`골드가 부족합니다.\n필요 골드: ${scorpionCost}`);
+  if (spawnCoolDown > 0) {
     return;
   }
+  if (userGold < scorpionCost) {
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${scorpionCost}`;
+    scrollContainer.appendChild(newMessage);
+    return;
+  }
+  spawnCoolDown = 30;
   // userGold -= scorpionCost;
   sendEvent(55, { uuid: uuid, type: 'Scorpion' });
 }
@@ -611,10 +624,16 @@ document.body.appendChild(spawnScorpionButton);
 
 // Spawn wizard in opponent game
 function spawnWizard() {
-  if (userGold < wizardCost) {
-    alert(`골드가 부족합니다.\n필요 골드: ${wizardCost}`);
+  if (spawnCoolDown > 0) {
     return;
   }
+  if (userGold < wizardCost) {
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${wizardCost}`;
+    scrollContainer.appendChild(newMessage);
+    return;
+  }
+  spawnCoolDown = 30;
   // userGold -= wizardCost;
   sendEvent(55, { uuid: uuid, type: 'Wizard' });
 }
@@ -634,10 +653,16 @@ document.body.appendChild(spawnWizardButton);
 
 // Spawn tanker in opponent game
 function spawnTanker() {
-  if (userGold < tankerCost) {
-    alert(`골드가 부족합니다.\n필요 골드: ${tankerCost}`);
+  if (spawnCoolDown > 0) {
     return;
   }
+  if (userGold < tankerCost) {
+    const newMessage = document.createElement('p');
+    newMessage.textContent = `system: 골드가 부족합니다. 필요 골드: ${tankerCost}`;
+    scrollContainer.appendChild(newMessage);
+    return;
+  }
+  spawnCoolDown = 30;
   // userGold -= tankerCost;
   sendEvent(55, { uuid: uuid, type: 'Tanker' });
 }
