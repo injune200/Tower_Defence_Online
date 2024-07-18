@@ -9,7 +9,6 @@ class Game {
     this.towerCost = 100; // 타워 구입 비용
     this.monsterSpawnInterval = 3000; // 몬스터 생성 주기
     this.state = 'waiting'; // 게임 상태
-    this.intervalManager = new IntervalManager(); // game intervalManager 생성
   }
 
   addUser(user) {
@@ -34,10 +33,6 @@ class Game {
 
   removeUser(uuid) {
     this.users = this.users.filter((user) => user.uuid !== uuid);
-  }
-
-  makeInterval(uuid, callBack, interval, type) {
-    this.intervalManager.addUserInterval(uuid, callBack, interval, type);
   }
 }
 
