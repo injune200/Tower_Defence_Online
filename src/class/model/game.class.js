@@ -1,5 +1,3 @@
-import IntervalManager from './manager/interval.manager.js';
-
 export const MAX_PLAYERS = 2;
 
 class Game {
