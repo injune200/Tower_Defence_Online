@@ -1,4 +1,4 @@
-# tower-defense-game
+# tower-defence-online
 
 ### 게임 설명
 
@@ -20,7 +20,7 @@
 
 ### AWS 배포 링크
 
-- [tower-defense-game](http://52.78.192.41:5500)
+- [tower-defence-online](http://52.78.192.41:5500)
 
 ### 기능
 
