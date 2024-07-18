@@ -677,20 +677,34 @@ Promise.all([
   });
 });
 
+function makeButton(button, text, func, top) {
+  button.textContent = text;
+  button.style.position = 'absolute';
+  button.style.top = top;
+  button.style.right = '10px';
+  button.style.padding = '10px 20px';
+  button.style.fontSize = '16px';
+  button.style.cursor = 'pointer';
+  button.style.display = 'none';
+
+  button.addEventListener('click', func);
+  document.body.appendChild(button);
+}
+
 const buyTowerButton = document.createElement('button');
-buyTowerButton.textContent = '타워 구입';
-buyTowerButton.style.position = 'absolute';
-buyTowerButton.style.top = '10px';
-buyTowerButton.style.right = '10px';
-buyTowerButton.style.padding = '10px 20px';
-buyTowerButton.style.fontSize = '16px';
-buyTowerButton.style.cursor = 'pointer';
-buyTowerButton.style.display = 'none';
+makeButton(buyTowerButton, '타워 구입', placeNewTower, '10px');
+const levelUpButton = document.createElement('button');
+makeButton(levelUpButton, 'Level Up', levelUp, '60px');
+const spawnScorpionButton = document.createElement('button');
+makeButton(spawnScorpionButton, 'Scorpion', spawnScorpion, '110px');
+const spawnWizardButton = document.createElement('button');
+makeButton(spawnWizardButton, 'Wizard', spawnWizard, '160px');
+const spawnTankerButton = document.createElement('button');
+makeButton(spawnTankerButton, 'Tanker', spawnTanker, '210px');
+const upgradeTowersButton = document.createElement('button');
+makeButton(upgradeTowersButton, 'Upgrade', upgradeTowers, '260px');
 
-buyTowerButton.addEventListener('click', placeNewTower);
 chatButton.addEventListener('click', chatUpload);
-
-document.body.appendChild(buyTowerButton);
 
 // level up
 function levelUp() {
@@ -707,20 +721,8 @@ function levelUp() {
   levelUpCost += 10;
   sendEvent(11, { uuid: uuid, monsterLevel });
 }
-const levelUpButton = document.createElement('button');
-levelUpButton.textContent = 'Level Up';
-levelUpButton.style.position = 'absolute';
-levelUpButton.style.top = '60px';
-levelUpButton.style.right = '10px';
-levelUpButton.style.padding = '10px 20px';
-levelUpButton.style.fontSize = '16px';
-levelUpButton.style.cursor = 'pointer';
-levelUpButton.style.display = 'none';
 
-levelUpButton.addEventListener('click', levelUp);
-
-document.body.appendChild(levelUpButton);
-
+// Spawn special monster
 function spawnSpecialMonster(type) {
   const newMonster = new Monster(
     customMonsterData,
@@ -753,19 +755,6 @@ function spawnScorpion() {
   userGold -= scorpionCost;
   sendEvent(55, { uuid: uuid, type: 'Scorpion' });
 }
-const spawnScorpionButton = document.createElement('button');
-spawnScorpionButton.textContent = 'Scorpion';
-spawnScorpionButton.style.position = 'absolute';
-spawnScorpionButton.style.top = '110px';
-spawnScorpionButton.style.right = '10px';
-spawnScorpionButton.style.padding = '10px 20px';
-spawnScorpionButton.style.fontSize = '16px';
-spawnScorpionButton.style.cursor = 'pointer';
-spawnScorpionButton.style.display = 'none';
-
-spawnScorpionButton.addEventListener('click', spawnScorpion);
-
-document.body.appendChild(spawnScorpionButton);
 
 // Spawn wizard in opponent game
 function spawnWizard() {
@@ -783,19 +772,6 @@ function spawnWizard() {
   userGold -= wizardCost;
   sendEvent(55, { uuid: uuid, type: 'Wizard' });
 }
-const spawnWizardButton = document.createElement('button');
-spawnWizardButton.textContent = 'Wizard';
-spawnWizardButton.style.position = 'absolute';
-spawnWizardButton.style.top = '160px';
-spawnWizardButton.style.right = '10px';
-spawnWizardButton.style.padding = '10px 20px';
-spawnWizardButton.style.fontSize = '16px';
-spawnWizardButton.style.cursor = 'pointer';
-spawnWizardButton.style.display = 'none';
-
-spawnWizardButton.addEventListener('click', spawnWizard);
-
-document.body.appendChild(spawnWizardButton);
 
 // Spawn tanker in opponent game
 function spawnTanker() {
@@ -813,20 +789,8 @@ function spawnTanker() {
   userGold -= tankerCost;
   sendEvent(55, { uuid: uuid, type: 'Tanker' });
 }
-const spawnTankerButton = document.createElement('button');
-spawnTankerButton.textContent = 'Tanker';
-spawnTankerButton.style.position = 'absolute';
-spawnTankerButton.style.top = '210px';
-spawnTankerButton.style.right = '10px';
-spawnTankerButton.style.padding = '10px 20px';
-spawnTankerButton.style.fontSize = '16px';
-spawnTankerButton.style.cursor = 'pointer';
-spawnTankerButton.style.display = 'none';
 
-spawnTankerButton.addEventListener('click', spawnTanker);
-
-document.body.appendChild(spawnTankerButton);
-
+// Upgrade the tower in my game
 function upgradeTowers() {
   if (userGold < towerUpgradeCost) {
     const newMessage = document.createElement('p');
@@ -854,19 +818,6 @@ function upgradeTowers() {
     return;
   }
 }
-const upgradeTowersButton = document.createElement('button');
-upgradeTowersButton.textContent = 'Upgrade';
-upgradeTowersButton.style.position = 'absolute';
-upgradeTowersButton.style.top = '260px';
-upgradeTowersButton.style.right = '10px';
-upgradeTowersButton.style.padding = '10px 20px';
-upgradeTowersButton.style.fontSize = '16px';
-upgradeTowersButton.style.cursor = 'pointer';
-upgradeTowersButton.style.display = 'none';
-
-upgradeTowersButton.addEventListener('click', upgradeTowers);
-
-document.body.appendChild(upgradeTowersButton);
 
 export const sendEvent = (handlerId, payload) => {
   serverSocket.emit('event', {
